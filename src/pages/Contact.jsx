@@ -143,7 +143,7 @@ export default function Contact() {
                 </p>
                 <p>
                   📧 <span className="font-semibold">Email:</span>{" "}
-                  info@notebookstore.com
+                  galilee.contact@gmail.com
                 </p>
 
                 {/* Social Media Icons */}
