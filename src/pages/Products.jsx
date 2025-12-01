@@ -1,0 +1,191 @@
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
+import Navbar from "../components/Navbar/Navbar";
+
+export default function Products() {
+  const [products, setProducts] = useState([]);
+  const [favorites, setFavorites] = useState({});
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [priceFilter, setPriceFilter] = useState({ min: 0, max: 10000 });
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
+      const cats = [];
+      const data = snap.docs.map((doc) => {
+        const d = doc.data();
+        if (d.category) cats.push(d.category);
+        return {
+          id: doc.id,
+          name: d.name,
+          image: d.imageUrl,
+          price: d.discountPrice ? d.discountPrice : d.price,
+          realPrice: d.price,
+          category: d.category,
+          details: d.description,
+        };
+      });
+      setProducts(data);
+      setCategories([...new Set(cats)]);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const toggleFavorite = (id) => {
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const filteredProducts = products.filter((product) => {
+    const matchSearch = product.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchCategory =
+      categoryFilter === "All" || product.category === categoryFilter;
+    const matchPrice =
+      product.price >= priceFilter.min && product.price <= priceFilter.max;
+    return matchSearch && matchCategory && matchPrice;
+  });
+
+  return (
+    <>
+      <Navbar />
+
+      <section className="bg-gray-50 min-h-screen py-9 sm:py-16 font-poppins">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Title */}
+          <motion.h2
+            className="font-extrabold text-2xl sm:text-4xl md:text-4xl text-darkBlue text-center leading-tight mb-10"
+            initial={{ opacity: 0, y: -40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8 }}
+          >
+            All Products in One Place
+          </motion.h2>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <input
+              type="text"
+              placeholder="Search products..."
+              className="p-3 rounded-xl border border-gray-300 shadow focus:ring-2 focus:ring-blue outline-none"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <select
+              className="p-3 rounded-xl border border-gray-300 shadow focus:ring-2 focus:ring-blue outline-none"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="All">All Categories</option>
+              {categories.map((cat, i) => (
+                <option key={i} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="p-3 rounded-xl border border-gray-300 shadow focus:ring-2 focus:ring-blue outline-none"
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "all") setPriceFilter({ min: 0, max: 10000 });
+                else if (val.includes("-")) {
+                  const [min, max] = val.split("-").map(Number);
+                  setPriceFilter({ min, max });
+                } else if (val === "500+")
+                  setPriceFilter({ min: 500, max: 100000 });
+              }}
+            >
+              <option value="all">All Prices</option>
+              <option value="0-50">0 - 50 EGP</option>
+              <option value="50-100">50 - 100 EGP</option>
+              <option value="100-200">100 - 200 EGP</option>
+              <option value="200-500">200 - 500 EGP</option>
+              <option value="500+">500+ EGP</option>
+            </select>
+          </div>
+
+          {/* Products Grid with Container Animation */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {filteredProducts.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
+                  duration: 0.6,
+                  ease: "easeOut",
+                }}
+                viewport={{ once: true }}
+                style={{ willChange: "transform, opacity" }}
+                className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+              >
+                <div className="relative overflow-hidden rounded-t-3xl">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500"
+                  />
+
+                  <button
+                    onClick={() => toggleFavorite(product.id)}
+                    className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
+                  >
+                    {favorites[product.id] ? (
+                      <AiFillHeart className="h-6 w-6 text-orange" />
+                    ) : (
+                      <AiOutlineHeart className="h-6 w-6 text-gray-400" />
+                    )}
+                  </button>
+
+                  <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
+                    {product.category}
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <h3 className="text-2xl font-semibold text-darkBlue">
+                    {product.name}
+                  </h3>
+                  <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
+                    {product.details}
+                  </p>
+                  <div className="flex items-center justify-between mt-6">
+                    <div className="text-lg font-bold text-orange">
+                      {product.realPrice !== product.price ? (
+                        <>
+                          <span className="line-through text-gray-400 mr-2">
+                            {product.realPrice} EGP
+                          </span>
+                          {product.price} EGP
+                        </>
+                      ) : (
+                        `${product.price} EGP`
+                      )}
+                    </div>
+                    <button className="bg-gradient-to-r from-orange to-orange/90 text-white py-2 px-4 rounded-lg font-semibold hover:from-orange/95 hover:to-orange/80 transition shadow">
+                      Add To Cart
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+    </>
+  );
+}
