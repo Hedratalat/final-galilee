@@ -142,7 +142,7 @@ export default function Contact() {
                   📞 <span className="font-semibold">Phone:</span> 01027539203
                 </p>
                 <p>
-                  📧 <span className="font-semibold">Email:</span>{" "}
+                  📧 <span className="font-semibold">Email:</span>
                   galilee.contact@gmail.com
                 </p>
 
