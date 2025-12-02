@@ -151,7 +151,7 @@ export default function HeroSection() {
             className="absolute 
       w-28 h-14 sm:w-36 sm:h-18 lg:w-44 lg:h-22
       bg-gradient-to-tr from-orange to-purple-600 rounded-3xl opacity-25 animate-float-2
-      bottom-[25%] right-[50%] sm:bottom-1/4 sm:right-1/2"
+      bottom-[25%] right-[50%] sm:bottom-1/4 sm:right-[45%]"
           ></div>
 
           {/* Circle 4 */}

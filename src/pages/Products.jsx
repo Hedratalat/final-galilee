@@ -12,6 +12,7 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 10000 });
   const [categories, setCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
@@ -49,6 +50,16 @@ export default function Products() {
       product.price >= priceFilter.min && product.price <= priceFilter.max;
     return matchSearch && matchCategory && matchPrice;
   });
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, priceFilter]);
+
+  const productsPerPage = 6;
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  const endIndex = currentPage * productsPerPage;
+  const startIndex = endIndex - productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
   return (
     <>
@@ -119,7 +130,7 @@ export default function Products() {
             viewport={{ once: true }}
             className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {filteredProducts.map((product, index) => (
+            {currentProducts.map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 50 }}
@@ -156,13 +167,16 @@ export default function Products() {
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <h3 className="text-2xl font-semibold text-darkBlue">
-                    {product.name}
-                  </h3>
-                  <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
-                    {product.details}
-                  </p>
+                <div className="p-6 flex flex-col justify-between h-64">
+                  <div>
+                    <h3 className="text-2xl font-semibold text-darkBlue">
+                      {product.name}
+                    </h3>
+                    <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
+                      {product.details}
+                    </p>
+                  </div>
+
                   <div className="flex items-center justify-between mt-6">
                     <div className="text-lg font-bold text-orange">
                       {product.realPrice !== product.price ? (
@@ -184,6 +198,49 @@ export default function Products() {
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Pagination */}
+          <div className="flex justify-center mt-10 gap-3 items-center">
+            {/* Previous Button */}
+            <button
+              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg border ${
+                currentPage === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+              }`}
+            >
+              Previous
+            </button>
+            {pages.map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 rounded-lg border ${
+                  page === currentPage
+                    ? "bg-darkBlue text-white"
+                    : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            {/* Next Button */}
+            <button
+              onClick={() =>
+                currentPage < totalPages && setCurrentPage(currentPage + 1)
+              }
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg border ${
+                currentPage === totalPages
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </section>
     </>
