@@ -2,12 +2,13 @@ import { Suspense, lazy } from "react";
 import "./App.css";
 import "./index.css";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import Products from "./pages/Products";
-import Contact from "./pages/Contact";
 import { Toaster } from "react-hot-toast";
 
 // Lazy load الصفحات
 const Home = lazy(() => import("./pages/Home"));
+const About = lazy(() => import("./pages/About"));
+const Products = lazy(() => import("./pages/Products"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 // Spinner component
 const LoadingSpinner = () => (
@@ -25,6 +26,7 @@ function App() {
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
             <Route path="/products" element={<Products />} />
             <Route path="/Contact" element={<Contact />} />
           </Routes>
