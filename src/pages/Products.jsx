@@ -130,117 +130,157 @@ export default function Products() {
             viewport={{ once: true }}
             className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
           >
-            {currentProducts.map((product, index) => (
+            {currentProducts.length === 0 ? (
               <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                className="col-span-full flex flex-col items-center justify-center py-20"
+                animate={{ y: [0, -10, 0] }}
                 transition={{
-                  delay: index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
-                  duration: 0.6,
-                  ease: "easeOut",
+                  repeat: Infinity,
+                  duration: 1.5,
+                  ease: "easeInOut",
                 }}
-                viewport={{ once: true }}
-                style={{ willChange: "transform, opacity" }}
-                className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                <div className="relative overflow-hidden rounded-t-3xl">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500"
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-24 w-24 text-gray-300 mb-6 animate-bounce"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-8 8-8-8"
                   />
+                </svg>
 
-                  <button
-                    onClick={() => toggleFavorite(product.id)}
-                    className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
-                  >
-                    {favorites[product.id] ? (
-                      <AiFillHeart className="h-6 w-6 text-orange" />
-                    ) : (
-                      <AiOutlineHeart className="h-6 w-6 text-gray-400" />
-                    )}
-                  </button>
-
-                  <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
-                    {product.category}
-                  </div>
-                </div>
-
-                <div className="p-6 flex flex-col justify-between flex-1">
-                  <div>
-                    <h3 className="text-2xl font-semibold text-darkBlue">
-                      {product.name}
-                    </h3>
-                    <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
-                      {product.details}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-6">
-                    <div className="text-lg font-bold text-orange">
-                      {product.realPrice !== product.price ? (
-                        <>
-                          <span className="line-through text-gray-400 mr-2">
-                            {product.realPrice} EGP
-                          </span>
-                          {product.price} EGP
-                        </>
-                      ) : (
-                        `${product.price} EGP`
-                      )}
-                    </div>
-                    <button className="bg-gradient-to-r from-orange to-orange/90 text-white py-2 px-4 rounded-lg font-semibold hover:from-orange/95 hover:to-orange/80 transition shadow">
-                      Add To Cart
-                    </button>
-                  </div>
-                </div>
+                <h3 className="text-2xl font-semibold text-gray-500 mb-2">
+                  No Products Available
+                </h3>
+                <p className="text-gray-400 text-center max-w-xs">
+                  Try changing the search or filters to see more products.
+                </p>
               </motion.div>
-            ))}
+            ) : (
+              currentProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
+                    duration: 0.6,
+                    ease: "easeOut",
+                  }}
+                  viewport={{ once: true }}
+                  style={{ willChange: "transform, opacity" }}
+                  className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="relative overflow-hidden rounded-t-3xl">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500"
+                    />
+
+                    <button
+                      onClick={() => toggleFavorite(product.id)}
+                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
+                    >
+                      {favorites[product.id] ? (
+                        <AiFillHeart className="h-6 w-6 text-orange" />
+                      ) : (
+                        <AiOutlineHeart className="h-6 w-6 text-gray-400" />
+                      )}
+                    </button>
+
+                    <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
+                      {product.category}
+                    </div>
+                  </div>
+
+                  <div className="p-6 flex flex-col justify-between flex-1 sm:h-64">
+                    <div>
+                      <h3 className="text-2xl font-semibold text-darkBlue">
+                        {product.name}
+                      </h3>
+                      <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
+                        {product.details}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-6">
+                      <div className="text-lg font-bold text-orange">
+                        {product.realPrice !== product.price ? (
+                          <>
+                            <span className="line-through text-gray-400 mr-2">
+                              {product.realPrice} EGP
+                            </span>
+                            {product.price} EGP
+                          </>
+                        ) : (
+                          `${product.price} EGP`
+                        )}
+                      </div>
+                      <button className="bg-gradient-to-r from-orange to-orange/90 text-white py-2 px-4 rounded-lg font-semibold hover:from-orange/95 hover:to-orange/80 transition shadow">
+                        Add To Cart
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </motion.div>
 
           {/* Pagination */}
-          <div className="flex justify-center mt-10 gap-3 items-center">
-            {/* Previous Button */}
-            <button
-              onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg border ${
-                currentPage === 1
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
-              }`}
-            >
-              Previous
-            </button>
-            {pages.map((page) => (
+          {currentProducts.length > 0 && (
+            <div className="flex justify-center mt-10 gap-3 items-center">
+              {/* Previous Button */}
               <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
+                onClick={() =>
+                  currentPage > 1 && setCurrentPage(currentPage - 1)
+                }
+                disabled={currentPage === 1 || totalPages === 0}
                 className={`px-4 py-2 rounded-lg border ${
-                  page === currentPage
-                    ? "bg-darkBlue text-white"
+                  currentPage === 1 || totalPages === 0
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
                 }`}
               >
-                {page}
+                Previous
               </button>
-            ))}
-            {/* Next Button */}
-            <button
-              onClick={() =>
-                currentPage < totalPages && setCurrentPage(currentPage + 1)
-              }
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-lg border ${
-                currentPage === totalPages
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
-              }`}
-            >
-              Next
-            </button>
-          </div>
+
+              {pages.map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-4 py-2 rounded-lg border ${
+                    page === currentPage
+                      ? "bg-darkBlue text-white"
+                      : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
+              {/* Next Button */}
+              <button
+                onClick={() =>
+                  currentPage < totalPages && setCurrentPage(currentPage + 1)
+                }
+                disabled={currentPage >= totalPages || totalPages === 0}
+                className={`px-4 py-2 rounded-lg border ${
+                  currentPage >= totalPages || totalPages === 0
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </>
