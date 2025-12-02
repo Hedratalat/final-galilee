@@ -167,7 +167,7 @@ export default function Products() {
                   </div>
                 </div>
 
-                <div className="p-6 flex flex-col justify-between h-64">
+                <div className="p-6 flex flex-col justify-between flex-1">
                   <div>
                     <h3 className="text-2xl font-semibold text-darkBlue">
                       {product.name}
