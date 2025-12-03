@@ -1,18 +1,24 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
-import { collection, onSnapshot } from "firebase/firestore";
+import { AiOutlineHeart, AiFillHeart, AiOutlineClose } from "react-icons/ai";
+import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import toast from "react-hot-toast";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
-  const [favorites, setFavorites] = useState({});
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 10000 });
   const [categories, setCategories] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [user, setUser] = useState(null);
+  const [favorites, setFavorites] = useState(() => {
+    const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
+    return localFav.reduce((acc, id) => ({ ...acc, [id]: true }), {});
+  });
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
@@ -36,8 +42,85 @@ export default function Products() {
     return () => unsubscribe();
   }, []);
 
-  const toggleFavorite = (id) => {
-    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  //check user login
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // merge Firebase & localStorage safe after login
+  useEffect(() => {
+    if (!user) return;
+
+    const userFavRef = doc(db, "Users", user.uid);
+
+    const unsubscribe = onSnapshot(userFavRef, (docSnap) => {
+      if (!docSnap.exists()) return;
+
+      const firebaseFav = docSnap.data().favorites || [];
+      const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
+
+      // localFav يكون المصدر الأساسي بعد login
+      const mergedFav = Array.from(new Set(localFav));
+
+      // تحديث localStorage (لو فيه فرق مع current localStorage)
+      if (JSON.stringify(localFav) !== JSON.stringify(mergedFav)) {
+        localStorage.setItem("favorites", JSON.stringify(mergedFav));
+      }
+
+      // تحديث state بطريقة آمنة
+      queueMicrotask(() => {
+        setFavorites(
+          mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {})
+        );
+      });
+
+      // تحديث Firebase فقط لو فيه فرق
+      if (JSON.stringify(firebaseFav) !== JSON.stringify(mergedFav)) {
+        updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
+          console.log("Error updating favorites:", err)
+        );
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // toggle favorite
+  const toggleFavorite = (id, name) => {
+    const updatedFavorites = { ...favorites, [id]: !favorites[id] };
+    const favIds = Object.keys(updatedFavorites).filter(
+      (key) => updatedFavorites[key]
+    );
+
+    // حفظ localStorage
+    localStorage.setItem("favorites", JSON.stringify(favIds));
+
+    // حفظ Firebase لو مسجّل دخول
+    if (user) {
+      const userFavRef = doc(db, "Users", user.uid);
+      updateDoc(userFavRef, { favorites: favIds }).catch((err) =>
+        console.log("Error updating favorites:", err)
+      );
+    }
+
+    // toast مباشر للمستخدم
+    if (updatedFavorites[id]) toast.success(`Added ${name} to favorites`);
+    else
+      toast(`Removed ${name} from favorites`, {
+        icon: <AiOutlineClose color="red" size={20} />,
+      });
+
+    // تحديث state محلي فقط
+    setFavorites(updatedFavorites);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -185,7 +268,7 @@ export default function Products() {
                     />
 
                     <button
-                      onClick={() => toggleFavorite(product.id)}
+                      onClick={() => toggleFavorite(product.id, product.name)}
                       className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
                     >
                       {favorites[product.id] ? (

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { FaFacebookF, FaInstagram, FaTiktok, FaWhatsapp } from "react-icons/fa";
 
 import { collection, addDoc } from "firebase/firestore";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 

@@ -5,6 +5,9 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 // Lazy load الصفحات
+const Login = lazy(() => import("./pages/Login"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const Products = lazy(() => import("./pages/Products"));
@@ -35,7 +38,9 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/products" element={<Products />} />
             <Route path="/Contact" element={<Contact />} />
-
+            <Route path="/login" element={<Login />} />{" "}
+            <Route path="/signup" element={<SignUp />} />{" "}
+            <Route path="/verify-email" element={<VerifyEmail />} />{" "}
             {/* //dashboard */}
             <Route
               path="/dashboard"
