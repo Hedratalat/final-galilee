@@ -68,22 +68,22 @@ export default function Products() {
       const firebaseFav = docSnap.data().favorites || [];
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
 
-      // localFav يكون المصدر الأساسي بعد login
-      const mergedFav = Array.from(new Set(localFav));
+      // خلي Firebase هو المصدر الأساسي بعد login
+      const mergedFav = Array.from(new Set([...firebaseFav, ...localFav]));
 
-      // تحديث localStorage (لو فيه فرق مع current localStorage)
+      // تحديث localStorage لو فيه فرق
       if (JSON.stringify(localFav) !== JSON.stringify(mergedFav)) {
         localStorage.setItem("favorites", JSON.stringify(mergedFav));
       }
 
-      // تحديث state بطريقة آمنة
+      // تحديث state
       queueMicrotask(() => {
         setFavorites(
           mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {})
         );
       });
 
-      // تحديث Firebase فقط لو فيه فرق
+      // تحديث Firebase لو فيه فرق
       if (JSON.stringify(firebaseFav) !== JSON.stringify(mergedFav)) {
         updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
           console.log("Error updating favorites:", err)
