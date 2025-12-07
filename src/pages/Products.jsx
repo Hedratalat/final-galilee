@@ -57,33 +57,28 @@ export default function Products() {
   }, []);
 
   // merge Firebase & localStorage safe after login
+  // merge Firebase & localStorage safe after login
   useEffect(() => {
     if (!user) return;
 
     const userFavRef = doc(db, "Users", user.uid);
 
     const unsubscribe = onSnapshot(userFavRef, (docSnap) => {
-      if (!docSnap.exists()) return;
-
-      const firebaseFav = docSnap.data().favorites || [];
+      const firebaseFav = docSnap.exists()
+        ? docSnap.data().favorites || []
+        : [];
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
 
-      // localFav يكون المصدر الأساسي بعد login
-      const mergedFav = Array.from(new Set(localFav));
+      // Merge كلاهما بدون تكرار
+      const mergedFav = Array.from(new Set([...localFav, ...firebaseFav]));
 
-      // تحديث localStorage (لو فيه فرق مع current localStorage)
-      if (JSON.stringify(localFav) !== JSON.stringify(mergedFav)) {
-        localStorage.setItem("favorites", JSON.stringify(mergedFav));
-      }
+      // حدث localStorage
+      localStorage.setItem("favorites", JSON.stringify(mergedFav));
 
-      // تحديث state بطريقة آمنة
-      queueMicrotask(() => {
-        setFavorites(
-          mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {})
-        );
-      });
+      // حدث state
+      setFavorites(mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
-      // تحديث Firebase فقط لو فيه فرق
+      // حدث Firebase لو فيه فرق
       if (JSON.stringify(firebaseFav) !== JSON.stringify(mergedFav)) {
         updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
           console.log("Error updating favorites:", err)

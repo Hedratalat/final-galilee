@@ -72,6 +72,7 @@ export default function Navbar() {
             <FaHeart
               className="hover:text-red-500 hover:scale-110 transition-transform duration-300 cursor-pointer"
               size={24}
+              onClick={() => navigate("/favorites")}
             />
             <FaShoppingCart
               className="hover:text-darkBlue hover:scale-110 transition-transform duration-300 cursor-pointer"
@@ -138,6 +139,7 @@ export default function Navbar() {
             <FaHeart
               className="hover:text-red-500 transition-transform duration-300 cursor-pointer"
               size={22}
+              onClick={() => navigate("/favorites")}
             />
             <FaShoppingCart
               className="hover:text-darkBlue transition-transform duration-300 cursor-pointer"
