@@ -19,6 +19,10 @@ export default function Products() {
     const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
     return localFav.reduce((acc, id) => ({ ...acc, [id]: true }), {});
   });
+  const [cart, setCart] = useState(() => {
+    const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+    return localCart.reduce((acc, id) => ({ ...acc, [id]: true }), {});
+  });
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
@@ -56,7 +60,7 @@ export default function Products() {
     return () => unsubscribe();
   }, []);
 
-  // merge Firebase & localStorage safe after login
+  // merge Firebase & localStorage safe after login Fav
   useEffect(() => {
     if (!user) return;
 
@@ -68,8 +72,13 @@ export default function Products() {
       const firebaseFav = docSnap.data().favorites || [];
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
 
-      // خلي Firebase هو المصدر الأساسي بعد login
-      const mergedFav = Array.from(new Set([...firebaseFav, ...localFav]));
+      // localStorage هو المصدر الأساسي بعد login
+      const mergedFav = Array.from(
+        new Set([
+          ...localFav,
+          ...firebaseFav.filter((id) => localFav.includes(id)),
+        ])
+      );
 
       // تحديث localStorage لو فيه فرق
       if (JSON.stringify(localFav) !== JSON.stringify(mergedFav)) {
@@ -77,18 +86,49 @@ export default function Products() {
       }
 
       // تحديث state
-      queueMicrotask(() => {
-        setFavorites(
-          mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {})
-        );
-      });
+      setFavorites(mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
-      // تحديث Firebase لو فيه فرق
-      if (JSON.stringify(firebaseFav) !== JSON.stringify(mergedFav)) {
-        updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
-          console.log("Error updating favorites:", err)
-        );
+      // تحديث Firebase
+      updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
+        console.log("Error updating favorites:", err)
+      );
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // merge Firebase & localStorage safe after login cart
+  useEffect(() => {
+    if (!user) return;
+
+    const userCartRef = doc(db, "Users", user.uid);
+
+    const unsubscribe = onSnapshot(userCartRef, (docSnap) => {
+      if (!docSnap.exists()) return;
+
+      const firebaseCart = docSnap.data().cart || [];
+      const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      // استخدم localStorage هو المصدر الأساسي
+      const mergedCart = Array.from(
+        new Set([
+          ...localCart,
+          ...firebaseCart.filter((id) => localCart.includes(id)),
+        ])
+      );
+
+      // تحديث localStorage لو فيه فرق
+      if (JSON.stringify(localCart) !== JSON.stringify(mergedCart)) {
+        localStorage.setItem("cart", JSON.stringify(mergedCart));
       }
+
+      // تحديث state
+      setCart(mergedCart.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
+
+      // تحديث Firebase
+      updateDoc(userCartRef, { cart: mergedCart }).catch((err) =>
+        console.log("Error updating cart:", err)
+      );
     });
 
     return () => unsubscribe();
@@ -121,6 +161,32 @@ export default function Products() {
 
     // تحديث state محلي فقط
     setFavorites(updatedFavorites);
+  };
+
+  // toggle cart
+  const toggleCart = (id, name) => {
+    const updatedCart = { ...cart, [id]: !cart[id] };
+    const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
+
+    // LocalStorage
+    localStorage.setItem("cart", JSON.stringify(cartIds));
+
+    // Firebase
+    if (user) {
+      const userCartRef = doc(db, "Users", user.uid);
+      updateDoc(userCartRef, { cart: cartIds }).catch((err) =>
+        console.log("Error updating cart:", err)
+      );
+    }
+
+    // Toast
+    if (updatedCart[id]) toast.success(`Added ${name} to cart`);
+    else
+      toast(`Removed ${name} from cart`, {
+        icon: <AiOutlineClose color="red" size={20} />,
+      });
+
+    setCart(updatedCart);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -306,8 +372,18 @@ export default function Products() {
                           `${product.price} EGP`
                         )}
                       </div>
-                      <button className="bg-gradient-to-r from-orange to-orange/90 text-white py-2 px-4 rounded-lg font-semibold hover:from-orange/95 hover:to-orange/80 transition shadow">
-                        Add To Cart
+                      <button
+                        onClick={() => toggleCart(product.id, product.name)}
+                        className={`
+                        py-2 px-4 rounded-lg font-semibold transition shadow
+                        ${
+                          cart[product.id]
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : "bg-gradient-to-r from-orange to-orange/90 text-white  hover:from-orange/95 hover:to-orange/80 "
+                        }
+                        `}
+                      >
+                        {cart[product.id] ? "Remove from Cart" : "Add To Cart"}
                       </button>
                     </div>
                   </div>

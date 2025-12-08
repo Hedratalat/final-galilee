@@ -77,6 +77,7 @@ export default function Navbar() {
             <FaShoppingCart
               className="hover:text-darkBlue hover:scale-110 transition-transform duration-300 cursor-pointer"
               size={24}
+              onClick={() => navigate("/cart")}
             />
             {/*  user icon */}
             <div className="relative group">
@@ -144,6 +145,7 @@ export default function Navbar() {
             <FaShoppingCart
               className="hover:text-darkBlue transition-transform duration-300 cursor-pointer"
               size={22}
+              onClick={() => navigate("/cart")}
             />
             <div className="relative group">
               <div
