@@ -6,6 +6,7 @@ import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import toast from "react-hot-toast";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -375,15 +376,21 @@ export default function Products() {
                       <button
                         onClick={() => toggleCart(product.id, product.name)}
                         className={`
-                        py-2 px-4 rounded-lg font-semibold transition shadow
-                        ${
-                          cart[product.id]
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : "bg-gradient-to-r from-orange to-orange/90 text-white  hover:from-orange/95 hover:to-orange/80 "
-                        }
-                        `}
+                            flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
+                            ${
+                              cart[product.id]
+                                ? "bg-red-600 hover:bg-red-700 text-white"
+                                : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+                            }
+                          `}
                       >
-                        {cart[product.id] ? "Remove from Cart" : "Add To Cart"}
+                        {cart[product.id] ? (
+                          <>
+                            Remove <FaShoppingCart size={20} color="white" />
+                          </>
+                        ) : (
+                          "Add To Cart"
+                        )}
                       </button>
                     </div>
                   </div>
