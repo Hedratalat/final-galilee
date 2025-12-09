@@ -83,6 +83,7 @@ export default function Cart() {
     const cartIds = Object.keys(updatedCart);
 
     localStorage.setItem("cart", JSON.stringify(cartIds));
+    window.dispatchEvent(new Event("cartUpdated"));
 
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);

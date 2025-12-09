@@ -9,12 +9,15 @@ import imgLogo from "../../assets/logo-02.png";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "../../firebase";
+import { auth, db } from "../../firebase";
+import { doc, onSnapshot } from "firebase/firestore";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isUserOpen, setIsUserOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [favoritesCount, setFavoritesCount] = useState(0);
+  const [cartCount, setCartCount] = useState(0);
 
   const navigate = useNavigate();
 
@@ -34,6 +37,67 @@ export default function Navbar() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const updateCounts = () => {
+      const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
+      const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+      setFavoritesCount(localFav.length);
+      setCartCount(localCart.length);
+    };
+
+    // تحديث أول مرة
+    updateCounts();
+
+    // الاستماع للتغييرات من tabs أخرى أو dispatch event
+    window.addEventListener("storage", updateCounts);
+    window.addEventListener("favoritesUpdated", updateCounts);
+    window.addEventListener("cartUpdated", updateCounts);
+
+    // إذا المستخدم مسجل دخول، نعمل merge Firebase مع localStorage
+    let unsubscribeFav = () => {};
+    let unsubscribeCart = () => {};
+
+    if (user) {
+      const userRef = doc(db, "Users", user.uid);
+
+      unsubscribeFav = onSnapshot(userRef, (docSnap) => {
+        if (!docSnap.exists()) return;
+        const firebaseFav = docSnap.data().favorites || [];
+        const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
+        const mergedFav = Array.from(
+          new Set([
+            ...localFav,
+            ...firebaseFav.filter((id) => localFav.includes(id)),
+          ])
+        );
+        localStorage.setItem("favorites", JSON.stringify(mergedFav));
+        setFavoritesCount(mergedFav.length);
+      });
+
+      unsubscribeCart = onSnapshot(userRef, (docSnap) => {
+        if (!docSnap.exists()) return;
+        const firebaseCart = docSnap.data().cart || [];
+        const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+        const mergedCart = Array.from(
+          new Set([
+            ...localCart,
+            ...firebaseCart.filter((id) => localCart.includes(id)),
+          ])
+        );
+        localStorage.setItem("cart", JSON.stringify(mergedCart));
+        setCartCount(mergedCart.length);
+      });
+    }
+
+    return () => {
+      window.removeEventListener("storage", updateCounts);
+      window.removeEventListener("favoritesUpdated", updateCounts);
+      window.removeEventListener("cartUpdated", updateCounts);
+      unsubscribeFav();
+      unsubscribeCart();
+    };
+  }, [user]);
+
   return (
     <nav className="bg-white/70 shadow sticky top-0 w-full z-50 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-2 sm:px-8 lg:px-12">
@@ -43,7 +107,8 @@ export default function Navbar() {
             <img
               src={imgLogo}
               alt="Logo"
-              className="h-20 w-auto transition-transform duration-300 hover:scale-105 "
+              className="h-20 w-auto transition-transform duration-300 hover:scale-105 cursor-pointer"
+              onClick={() => navigate("/")}
             />
           </div>
 
@@ -69,16 +134,30 @@ export default function Navbar() {
 
           {/* Icons - Desktop */}
           <div className="hidden md:flex items-center space-x-4 text-gray-700 text-xl">
-            <FaHeart
-              className="hover:text-red-500 hover:scale-110 transition-transform duration-300 cursor-pointer"
-              size={24}
-              onClick={() => navigate("/favorites")}
-            />
-            <FaShoppingCart
-              className="hover:text-darkBlue hover:scale-110 transition-transform duration-300 cursor-pointer"
-              size={24}
-              onClick={() => navigate("/cart")}
-            />
+            <div className="relative">
+              <FaHeart
+                className="hover:text-red-500 hover:scale-110 transition-transform duration-300 cursor-pointer"
+                size={24}
+                onClick={() => navigate("/favorites")}
+              />
+              {favoritesCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {favoritesCount}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <FaShoppingCart
+                className="hover:text-darkBlue hover:scale-110 transition-transform duration-300 cursor-pointer"
+                size={24}
+                onClick={() => navigate("/cart")}
+              />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </div>
             {/*  user icon */}
             <div className="relative group">
               <div
@@ -136,17 +215,31 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-3 text-gray-700">
-            {/* Icons in Mobile */}
-            <FaHeart
-              className="hover:text-red-500 transition-transform duration-300 cursor-pointer"
-              size={22}
-              onClick={() => navigate("/favorites")}
-            />
-            <FaShoppingCart
-              className="hover:text-darkBlue transition-transform duration-300 cursor-pointer"
-              size={22}
-              onClick={() => navigate("/cart")}
-            />
+            {/* Icons in Mobile */}{" "}
+            <div className="relative">
+              <FaHeart
+                className="hover:text-red-500 transition-transform duration-300 cursor-pointer"
+                size={22}
+                onClick={() => navigate("/favorites")}
+              />
+              {favoritesCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {favoritesCount}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <FaShoppingCart
+                className="hover:text-darkBlue transition-transform duration-300 cursor-pointer"
+                size={22}
+                onClick={() => navigate("/cart")}
+              />
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-orange text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </div>
             <div className="relative group">
               <div
                 onClick={() => setIsUserOpen(!isUserOpen)}

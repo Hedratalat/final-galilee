@@ -144,6 +144,7 @@ export default function Products() {
 
     // حفظ localStorage
     localStorage.setItem("favorites", JSON.stringify(favIds));
+    window.dispatchEvent(new Event("favoritesUpdated"));
 
     // حفظ Firebase لو مسجّل دخول
     if (user) {
@@ -171,6 +172,7 @@ export default function Products() {
 
     // LocalStorage
     localStorage.setItem("cart", JSON.stringify(cartIds));
+    window.dispatchEvent(new Event("cartUpdated"));
 
     // Firebase
     if (user) {

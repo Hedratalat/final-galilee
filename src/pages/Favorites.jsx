@@ -6,12 +6,17 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import toast from "react-hot-toast";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function Favorites() {
   const [products, setProducts] = useState([]);
   const [favProducts, setFavProducts] = useState([]);
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [cart, setCart] = useState(() => {
+    const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+    return localCart.reduce((acc, id) => ({ ...acc, [id]: true }), {});
+  });
 
   // Fetch products
   useEffect(() => {
@@ -44,29 +49,27 @@ export default function Favorites() {
   // Fetch and Merge Favorites
   useEffect(() => {
     if (!user) {
+      // لو مش مسجل دخول، اعتمد فقط على localStorage
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
       const filtered = products.filter((p) => localFav.includes(p.id));
       setFavProducts(filtered);
-      return;
+      return; // مهم جداً نرجع هنا وما نعملش merge مع Firebase
     }
 
+    // لو مسجل دخول
     const userFavRef = doc(db, "Users", user.uid);
 
     const unsubscribe = onSnapshot(userFavRef, async (snap) => {
-      // read latest localStorage inside the snapshot handler to avoid stale closure
-      const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
       const firebaseFav = snap.exists() ? snap.data().favorites || [] : [];
-      const merged = Array.from(new Set([...localFav, ...firebaseFav]));
+      const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
+
+      // localStorage هو المصدر الرئيسي
+      const merged = Array.from(new Set(localFav));
 
       localStorage.setItem("favorites", JSON.stringify(merged));
 
-      try {
-        // only update firebase if different
-        if (JSON.stringify(merged) !== JSON.stringify(firebaseFav)) {
-          await updateDoc(userFavRef, { favorites: merged });
-        }
-      } catch (err) {
-        console.error("Failed to update favorites:", err);
+      if (JSON.stringify(merged) !== JSON.stringify(firebaseFav)) {
+        await updateDoc(userFavRef, { favorites: merged });
       }
 
       const filtered = products.filter((p) => merged.includes(p.id));
@@ -82,6 +85,7 @@ export default function Favorites() {
     let localFav = JSON.parse(localStorage.getItem("favorites")) || [];
     localFav = localFav.filter((item) => item !== id);
     localStorage.setItem("favorites", JSON.stringify(localFav));
+    window.dispatchEvent(new Event("favoritesUpdated"));
 
     // Update Firebase if user exists
     if (user) {
@@ -95,6 +99,31 @@ export default function Favorites() {
     toast(`Removed from favorites`, {
       icon: <AiOutlineClose color="red" size={20} />,
     });
+  };
+  // toggle cart
+  const toggleCart = (id, name) => {
+    const updatedCart = { ...cart, [id]: !cart[id] };
+    const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
+
+    // تحديث localStorage
+    localStorage.setItem("cart", JSON.stringify(cartIds));
+    window.dispatchEvent(new Event("cartUpdated"));
+
+    // تحديث Firebase لو المستخدم مسجل دخول
+    if (user) {
+      const userCartRef = doc(db, "Users", user.uid);
+      updateDoc(userCartRef, { cart: cartIds }).catch(console.log);
+    }
+
+    // toast
+    if (updatedCart[id]) toast.success(`Added ${name} to cart`);
+    else
+      toast(`Removed ${name} from cart`, {
+        icon: <AiOutlineClose color="red" size={20} />,
+      });
+
+    // تحديث state
+    setCart(updatedCart);
   };
 
   //Pagination
@@ -214,8 +243,24 @@ export default function Favorites() {
                           `${product.price} EGP`
                         )}
                       </div>
-                      <button className="bg-gradient-to-r from-orange to-orange/90 text-white py-2 px-4 rounded-lg font-semibold hover:from-orange/95 hover:to-orange/80 transition shadow">
-                        Add To Cart
+                      <button
+                        onClick={() => toggleCart(product.id, product.name)}
+                        className={`
+    flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
+    ${
+      cart[product.id]
+        ? "bg-red-600 hover:bg-red-700 text-white"
+        : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+    }
+  `}
+                      >
+                        {cart[product.id] ? (
+                          <>
+                            Remove <FaShoppingCart size={20} color="white" />
+                          </>
+                        ) : (
+                          "Add To Cart"
+                        )}
                       </button>
                     </div>
                   </div>
