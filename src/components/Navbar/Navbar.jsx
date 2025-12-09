@@ -43,7 +43,7 @@ export default function Navbar() {
             <img
               src={imgLogo}
               alt="Logo"
-              className="h-20 w-auto transition-transform duration-300 hover:scale-105"
+              className="h-20 w-auto transition-transform duration-300 hover:scale-105  mr-4 md:mr-0"
             />
           </div>
 
@@ -135,7 +135,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center space-x-3 text-gray-700">
+          <div className="md:hidden flex items-center gap-3 text-gray-700">
             {/* Icons in Mobile */}
             <FaHeart
               className="hover:text-red-500 transition-transform duration-300 cursor-pointer"

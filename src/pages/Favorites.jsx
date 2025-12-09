@@ -13,7 +13,7 @@ export default function Favorites() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // 1) Load all products
+  // Fetch products
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "Products"), (snap) => {
       const data = snap.docs.map((doc) => ({
@@ -33,7 +33,7 @@ export default function Favorites() {
     return () => unsub();
   }, []);
 
-  // 2) Check authentication
+  // Check authentication
   useEffect(() => {
     const auth = getAuth();
     return onAuthStateChanged(auth, (currentUser) => {
@@ -41,9 +41,7 @@ export default function Favorites() {
     });
   }, []);
 
-  // 3) Fetch and Merge Favorites
-  // ...existing code...
-  // 3) Fetch and Merge Favorites
+  // Fetch and Merge Favorites
   useEffect(() => {
     if (!user) {
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
@@ -77,7 +75,8 @@ export default function Favorites() {
 
     return () => unsubscribe();
   }, [user, products]);
-  // 4) Remove from favorites function
+
+  //  Remove from favorites function
   const removeFavorite = async (id) => {
     // Update localStorage
     let localFav = JSON.parse(localStorage.getItem("favorites")) || [];
