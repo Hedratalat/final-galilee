@@ -36,14 +36,14 @@ export default function Navbar() {
 
   return (
     <nav className="bg-white/70 shadow sticky top-0 w-full z-50 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex-shrink-0">
             <img
               src={imgLogo}
               alt="Logo"
-              className="h-20 w-auto transition-transform duration-300 hover:scale-105  mr-4 md:mr-0"
+              className="h-20 w-auto transition-transform duration-300 hover:scale-105 "
             />
           </div>
 
