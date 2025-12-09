@@ -134,11 +134,13 @@ export default function Navbar() {
 
           {/* Icons - Desktop */}
           <div className="hidden md:flex items-center space-x-4 text-gray-700 text-xl">
-            <div className="relative">
+            <div
+              className="relative cursor-pointer "
+              onClick={() => navigate("/favorites")}
+            >
               <FaHeart
                 className="hover:text-red-500 hover:scale-110 transition-transform duration-300 cursor-pointer"
                 size={24}
-                onClick={() => navigate("/favorites")}
               />
               {favoritesCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-orange text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
@@ -146,7 +148,10 @@ export default function Navbar() {
                 </span>
               )}
             </div>
-            <div className="relative">
+            <div
+              className="relative cursor-pointer"
+              onClick={() => navigate("/cart")}
+            >
               <FaShoppingCart
                 className="hover:text-darkBlue hover:scale-110 transition-transform duration-300 cursor-pointer"
                 size={24}
