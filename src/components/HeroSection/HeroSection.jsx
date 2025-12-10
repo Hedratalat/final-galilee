@@ -152,7 +152,7 @@ export default function HeroSection() {
           <div
             className="absolute 
       w-72 h-72 sm:w-64 sm:h-64 lg:w-96 lg:h-96 
-      bg-blue rounded-full z-0 opacity-50 animate-pulse
+      bg-darkBlue rounded-full z-0 opacity-50 animate-pulse
       top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
           ></div>
 
