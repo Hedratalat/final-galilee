@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { FaFacebookF, FaWhatsapp, FaTiktok, FaInstagram } from "react-icons/fa";
-import img1 from "../../assets/asbngdxxo-removebg-preview.png";
-import img2 from "../../assets/hero.png";
+import img1 from "../../assets/heroboy.png";
+import img2 from "../../assets/herogal.png";
+import img3 from "../../assets/herogirl.png";
+import { useNavigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 export default function HeroSection() {
-  const images = [img1, img2];
+  const images = [img1, img2, img3];
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
   const [fadeIn, setFadeIn] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fadeTimer = setTimeout(() => setFadeIn(true), 100);
@@ -47,13 +53,12 @@ export default function HeroSection() {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center w-full relative z-10 gap-6 sm:gap-8 lg:gap-12">
         {/* Text Section */}
-        <div className="w-full lg:w-1/2 text-left flex flex-col justify-center items-center lg:items-start mt-4  lg:mt-6 sm:py-8 lg:py-0">
-          <h1 className="text-5xl sm:text-5xl lg:text-7xl font-bold font-poppins bg-gradient-to-r from-darkBlue via-blue to-orange bg-clip-text text-transparent mb-4 leading-tight text-center lg:text-left">
-            Take a Breath
+        <div className="w-full lg:w-1/2 text-left flex flex-col justify-center items-center lg:items-start mt-4  lg:mt-6 sm:py-8 lg:py-0 ">
+          <h1 className="text-5xl pb-1 sm:text-5xl lg:text-6xl font-bold font-poppins bg-gradient-to-r from-darkBlue via-blue to-orange bg-clip-text text-transparent mb-4 leading-tight text-center lg:text-left">
+            The Place
             <br />
-            <span className="text-5xl sm:text-4xl lg:text-7xl lg:ml-2">
-              {" "}
-              and Pray
+            <span className="text-5xl sm:text-4xl lg:text-6xl lg:ml-2">
+              Where You Meet <span className="lg:ml-1 ">Jesus again</span>
             </span>
           </h1>
 
@@ -65,29 +70,39 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6 w-full sm:w-auto justify-center lg:justify-start">
-            <button className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange to-orange/90 text-white font-bold font-poppins rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full sm:w-auto">
-              <span className="relative z-10">Start Now</span>
+            <button
+              onClick={() => navigate("/products")}
+              className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange to-orange/90 text-white font-bold font-poppins rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
+            >
+              <span className="relative z-10">Shop Now</span>
             </button>
-            <button className="px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-darkBlue text-darkBlue font-bold font-poppins rounded-2xl hover:bg-darkBlue hover:text-white hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-lg">
+            <button
+              onClick={() => navigate("/about")}
+              className="px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-darkBlue text-darkBlue font-bold font-poppins rounded-2xl hover:bg-darkBlue hover:text-white hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-lg"
+            >
               Learn More
             </button>
           </div>
 
           {/* Quick Links */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 items-center mb-4 justify-center lg:justify-start">
-            {["Features", "About Us", "Contact"].map((item, idx) => (
+          <div className="flex flex-wrap gap-2 sm:gap-3 items-center mb-4 justify-center lg:justify-start cursor-pointer">
+            {[
+              { name: "Categories", link: "/categories" },
+              { name: "Testimonials", link: "/testimonials" },
+              { name: "Contact", link: "/contact" },
+            ].map(({ name, link }, idx) => (
               <a
                 key={idx}
-                href="#"
+                onClick={() => navigate(link)}
                 className="group px-4 sm:px-6 py-2 rounded-xl font-semibold font-poppins text-white bg-gradient-to-r from-darkBlue to-blue hover:from-blue hover:to-darkBlue transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 text-center"
               >
-                {item}
+                {name}
               </a>
             ))}
           </div>
 
           {/* Social Icons */}
-          <div className="flex flex-row gap-3 sm:gap-4 mt-4 sm:mb-7 justify-center lg:justify-start w-full sm:w-auto">
+          <div className="flex flex-row gap-3 sm:gap-4 mt-4 sm:mt-2 lg:mb-7 justify-center lg:justify-start w-full sm:w-auto">
             {[
               {
                 Icon: FaFacebookF,
@@ -127,7 +142,10 @@ export default function HeroSection() {
         </div>
 
         {/* Image Section */}
-        <div className="w-full lg:w-1/2 relative flex justify-center lg:justify-end min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] mt-6 sm:mt-8 lg:mt-0">
+        <div
+          className="w-full lg:w-1/2 relative flex justify-center 
+        lg:justify-end min-h-[250px] sm:min-h-[250px] lg:min-h-[500px] mt-6 sm:mt-0 lg:mt-0"
+        >
           {/* Decorative Circles */}
 
           {/* Circle 1 */}
@@ -164,13 +182,18 @@ export default function HeroSection() {
 
           {/* Character Image */}
           <div className="relative z-10 flex items-center justify-center w-full">
-            <img
-              src={images[currentImgIndex]}
-              alt="Character"
-              className={`w-64 h-64 sm:w-64 sm:h-64 lg:w-96 lg:h-96 object-contain transition-all duration-500 hover:scale-105 ${
-                currentImgIndex === 1 ? "transform translate-y-2 " : ""
-              }`}
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentImgIndex} // مهم جداً عشان AnimatePresence تعرف الصورة اتغيرت
+                src={images[currentImgIndex]}
+                alt="Character"
+                className="w-64 h-64 sm:w-64 sm:h-64 lg:w-[350px] lg:h-[350px] object-contain"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }} // البداية
+                animate={{ opacity: 1, scale: 1, y: 0 }} // النهاية
+                exit={{ opacity: 0, scale: 0.95, y: -20 }} // لما تختفي الصورة
+                transition={{ duration: 0.8, ease: "easeInOut" }} // سرعة وسلاسة
+              />
+            </AnimatePresence>
           </div>
         </div>
       </div>
