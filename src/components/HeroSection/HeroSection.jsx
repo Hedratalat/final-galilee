@@ -71,13 +71,19 @@ export default function HeroSection() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 mb-6 w-full sm:w-auto justify-center lg:justify-start">
             <button
-              onClick={() => navigate("/products")}
+              onClick={() => {
+                navigate("/products");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-orange to-orange/90 text-white font-bold font-poppins rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 w-full sm:w-auto"
             >
               <span className="relative z-10">Shop Now</span>
             </button>
             <button
-              onClick={() => navigate("/about")}
+              onClick={() => {
+                navigate("/about");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-darkBlue text-darkBlue font-bold font-poppins rounded-2xl hover:bg-darkBlue hover:text-white hover:scale-105 transition-all duration-300 w-full sm:w-auto shadow-lg"
             >
               Learn More
@@ -87,13 +93,23 @@ export default function HeroSection() {
           {/* Quick Links */}
           <div className="flex flex-wrap gap-2 sm:gap-3 items-center mb-4 justify-center lg:justify-start cursor-pointer">
             {[
-              { name: "Categories", link: "/categories" },
+              { name: "Categories", link: "#categories-section" },
               { name: "Testimonials", link: "/testimonials" },
               { name: "Contact", link: "/contact" },
             ].map(({ name, link }, idx) => (
               <a
                 key={idx}
-                onClick={() => navigate(link)}
+                onClick={() => {
+                  if (link.startsWith("#")) {
+                    const el = document.querySelector(link);
+                    const topPos =
+                      el.getBoundingClientRect().top + window.pageYOffset - 20;
+                    window.scrollTo({ top: topPos, behavior: "smooth" });
+                  } else {
+                    navigate(link);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
                 className="group px-4 sm:px-6 py-2 rounded-xl font-semibold font-poppins text-white bg-gradient-to-r from-darkBlue to-blue hover:from-blue hover:to-darkBlue transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 text-center"
               >
                 {name}
@@ -144,7 +160,7 @@ export default function HeroSection() {
         {/* Image Section */}
         <div
           className="w-full lg:w-1/2 relative flex justify-center 
-        lg:justify-end min-h-[250px] sm:min-h-[250px] lg:min-h-[500px] mt-6 sm:mt-0 lg:mt-0"
+        lg:justify-end min-h-[250px] sm:min-h-[250px] lg:min-h-[500px] mt-6 sm:mt-0 lg:mt-0 mb-10"
         >
           {/* Decorative Circles */}
 

@@ -7,7 +7,14 @@ import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import toast from "react-hot-toast";
-import { AiOutlineClose, AiOutlineDelete } from "react-icons/ai";
+import {
+  AiOutlineClose,
+  AiOutlineDelete,
+  AiOutlinePlus,
+  AiOutlineMinus,
+} from "react-icons/ai";
+import Footer from "../components/Footer/Footer";
+import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
   const [products, setProducts] = useState([]);
@@ -15,7 +22,14 @@ export default function Cart() {
     const localCart = JSON.parse(localStorage.getItem("cart")) || [];
     return localCart.reduce((acc, id) => ({ ...acc, [id]: true }), {});
   });
+  const [quantities, setQuantities] = useState(() => {
+    const localQuantities =
+      JSON.parse(localStorage.getItem("cartQuantities")) || {};
+    return localQuantities;
+  });
   const [user, setUser] = useState(null);
+
+  const navigate = useNavigate();
 
   // Fetch products
   useEffect(() => {
@@ -33,6 +47,7 @@ export default function Cart() {
         };
       });
       setProducts(data);
+      localStorage.setItem("cartProducts", JSON.stringify(data));
     });
     return () => unsubscribe();
   }, []);
@@ -56,7 +71,10 @@ export default function Cart() {
       if (!docSnap.exists()) return;
 
       const firebaseCart = docSnap.data().cart || [];
+      const firebaseQuantities = docSnap.data().cartQuantities || {};
       const localCart = JSON.parse(localStorage.getItem("cart")) || [];
+      const localQuantities =
+        JSON.parse(localStorage.getItem("cartQuantities")) || {};
 
       const mergedCart = Array.from(
         new Set([
@@ -65,16 +83,55 @@ export default function Cart() {
         ])
       );
 
+      const mergedQuantities = { ...firebaseQuantities, ...localQuantities };
+
       if (JSON.stringify(localCart) !== JSON.stringify(mergedCart)) {
         localStorage.setItem("cart", JSON.stringify(mergedCart));
       }
 
+      if (
+        JSON.stringify(localQuantities) !== JSON.stringify(mergedQuantities)
+      ) {
+        localStorage.setItem(
+          "cartQuantities",
+          JSON.stringify(mergedQuantities)
+        );
+      }
+
       setCart(mergedCart.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
-      updateDoc(userCartRef, { cart: mergedCart }).catch(console.log);
+      setQuantities(mergedQuantities);
+      updateDoc(userCartRef, {
+        cart: mergedCart,
+        cartQuantities: mergedQuantities,
+      }).catch(console.log);
     });
 
     return () => unsubscribe();
   }, [user]);
+
+  // Update quantity function
+  const updateQuantity = (id, change, name) => {
+    const currentQty = quantities[id] || 1;
+    const newQty = currentQty + change;
+
+    // If quantity becomes 0 or less, remove item from cart
+    if (newQty <= 0) {
+      removeFromCart(id, name);
+      return;
+    }
+
+    const updatedQuantities = { ...quantities, [id]: newQty };
+    setQuantities(updatedQuantities);
+
+    localStorage.setItem("cartQuantities", JSON.stringify(updatedQuantities));
+
+    if (user) {
+      const userCartRef = doc(db, "Users", user.uid);
+      updateDoc(userCartRef, { cartQuantities: updatedQuantities }).catch(
+        console.log
+      );
+    }
+  };
 
   //  Remove from cart function
   const removeFromCart = (id, name) => {
@@ -82,12 +139,19 @@ export default function Cart() {
     delete updatedCart[id];
     const cartIds = Object.keys(updatedCart);
 
+    const updatedQuantities = { ...quantities };
+    delete updatedQuantities[id];
+
     localStorage.setItem("cart", JSON.stringify(cartIds));
+    localStorage.setItem("cartQuantities", JSON.stringify(updatedQuantities));
     window.dispatchEvent(new Event("cartUpdated"));
 
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
-      updateDoc(userCartRef, { cart: cartIds }).catch(console.log);
+      updateDoc(userCartRef, {
+        cart: cartIds,
+        cartQuantities: updatedQuantities,
+      }).catch(console.log);
     }
 
     toast.error(`Removed ${name} from cart`, {
@@ -95,11 +159,12 @@ export default function Cart() {
     });
 
     setCart(updatedCart);
+    setQuantities(updatedQuantities);
   };
 
   const cartItems = products.filter((p) => cart[p.id]);
   const total = cartItems.reduce(
-    (acc, item) => acc + Number(item.price || 0),
+    (acc, item) => acc + Number(item.price || 0) * (quantities[item.id] || 1),
     0
   );
 
@@ -173,7 +238,16 @@ export default function Cart() {
                     transition={{ delay: index * 0.1, duration: 0.5 }}
                     className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                   >
-                    <div className="flex flex-col sm:flex-row gap-4 p-5">
+                    <div className="flex flex-col sm:flex-row gap-4 p-5 relative">
+                      {/* Delete Icon - Top Right */}
+                      <button
+                        onClick={() => removeFromCart(item.id, item.name)}
+                        className="absolute top-2  right-2  text-white hover:text-white bg-red-400 hover:bg-red-500 
+                        p-2 rounded-full transition-all duration-300 border border-red-400"
+                      >
+                        <AiOutlineDelete size={18} />
+                      </button>
+
                       {/* Product Image */}
                       <div className="flex-shrink-0">
                         <img
@@ -185,7 +259,7 @@ export default function Cart() {
                       {/* Product Info */}
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h3 className="text-xl font-bold text-darkBlue mb-2">
+                          <h3 className="text-xl font-bold text-darkBlue mb-2 pr-8">
                             {item.name}
                           </h3>
                           <p className="text-sm text-gray-600 mb-2">
@@ -196,7 +270,7 @@ export default function Cart() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center justify-between mt-4 gap-3 flex-wrap">
                           {/* price */}
                           <div className="text-lg font-bold text-orange">
                             {item.realPrice !== item.price ? (
@@ -211,15 +285,28 @@ export default function Cart() {
                             )}
                           </div>
 
-                          {/* Remove item */}
-                          <button
-                            onClick={() => removeFromCart(item.id, item.name)}
-                            className="flex items-center gap-2 text-red-500 hover:text-white
-                           hover:bg-red-500  text-sm font-medium px-4 py-2 border border-red-500 rounded-lg transition-all duration-300"
-                          >
-                            <AiOutlineDelete size={18} />
-                            Remove
-                          </button>
+                          {/* Quantity Controls */}
+                          <div className="flex items-center border border-gray-300 rounded-lg">
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, -1, item.name)
+                              }
+                              className="p-2 hover:bg-gray-100 transition-colors"
+                            >
+                              <AiOutlineMinus size={16} />
+                            </button>
+                            <span className="px-4 py-2 font-semibold min-w-[40px] text-center">
+                              {quantities[item.id] || 1}
+                            </span>
+                            <button
+                              onClick={() =>
+                                updateQuantity(item.id, 1, item.name)
+                              }
+                              className="p-2 hover:bg-gray-100 transition-colors"
+                            >
+                              <AiOutlinePlus size={16} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -243,7 +330,14 @@ export default function Cart() {
 
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-gray-600">
-                      <span>items ({cartItems.length})</span>
+                      <span>
+                        items (
+                        {cartItems.reduce(
+                          (acc, item) => acc + (quantities[item.id] || 1),
+                          0
+                        )}
+                        )
+                      </span>
                       <span>{total.toFixed(2)} EGP</span>
                     </div>
                     {/* <div className="flex justify-between text-gray-600">
@@ -261,13 +355,18 @@ export default function Cart() {
                   </div>
 
                   <button
+                    onClick={() =>
+                      navigate("/checkout", {
+                        state: { totalPrice: total.toFixed(2) },
+                      })
+                    }
                     className="w-full bg-gradient-to-r from-orange to-orange/90 hover:from-orange/95 hover:to-orange/80 text-white
                   font-bold py-4 px-8 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-[1.02]"
                   >
                     Proceed to Checkout
                   </button>
                   <p className="text-xs text-gray-500 text-center mt-4">
-                    Tax and shipping calculated at checkout
+                    Shipping not included yet
                   </p>
                 </motion.div>
               </div>
@@ -275,6 +374,7 @@ export default function Cart() {
           )}
         </div>
       </section>
+      <Footer />
     </>
   );
 }

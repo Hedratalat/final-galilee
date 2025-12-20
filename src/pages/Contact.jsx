@@ -6,6 +6,7 @@ import { collection, addDoc } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
+import Footer from "../components/Footer/Footer";
 
 export default function Contact() {
   const [name, setName] = useState("");
@@ -189,6 +190,7 @@ export default function Contact() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

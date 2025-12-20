@@ -20,7 +20,12 @@ const ManageProducts = lazy(() => import("./pages/ManageProducts"));
 const DashBoardLayout = lazy(() =>
   import("./components/DashboardLayout/DashboardLayout")
 );
-
+const FeedbackDash = lazy(() => import("./pages/FeedbackDash"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const MessageDash = lazy(() => import("./pages/MessageDash"));
+const ButtonScroll = lazy(() =>
+  import("./components/ButtonScroll/ButtonScroll")
+);
 // Spinner component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
@@ -42,6 +47,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
@@ -58,14 +64,17 @@ function App() {
               <Route path="overview" element={<Overview />} />
               <Route path="addProducts" element={<AddProducts />} />
               <Route path="productsManagement" element={<ManageProducts />} />
+              <Route path="Feedback" element={<FeedbackDash />} />
+              <Route path="message" element={<MessageDash />} />
+
               {/* <Route path="userDash" element={<UserDash />} />
               <Route path="ordersDah" element={<OrdersDah />} />
               <Route path="feedback" element={<FeedbackDash />} /> */}
-              {/* <Route path="message" element={<MessageDash />} /> */}
             </Route>
           </Routes>
         </Suspense>
       </HashRouter>
+      <ButtonScroll />
       <Toaster position="top-center" reverseOrder={false} />
     </>
   );

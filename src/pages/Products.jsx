@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar/Navbar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import toast from "react-hot-toast";
 import { FaShoppingCart } from "react-icons/fa";
+import Footer from "../components/Footer/Footer";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -327,13 +328,13 @@ export default function Products() {
                   }}
                   viewport={{ once: true }}
                   style={{ willChange: "transform, opacity" }}
-                  className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300"
+                  className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 mb-4"
                 >
                   <div className="relative overflow-hidden rounded-t-3xl">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500"
+                      className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 "
                     />
 
                     <button
@@ -403,7 +404,7 @@ export default function Products() {
 
           {/* Pagination */}
           {currentProducts.length > 0 && (
-            <div className="flex justify-center mt-10 gap-3 items-center">
+            <div className="flex justify-center mt-8  gap-3 items-center">
               {/* Previous Button */}
               <button
                 onClick={() =>
@@ -451,6 +452,7 @@ export default function Products() {
           )}
         </div>
       </section>
+      <Footer />
     </>
   );
 }

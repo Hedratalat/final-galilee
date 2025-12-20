@@ -7,6 +7,7 @@ import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import toast from "react-hot-toast";
 import { FaShoppingCart } from "react-icons/fa";
+import Footer from "../components/Footer/Footer";
 
 export default function Favorites() {
   const [products, setProducts] = useState([]);
@@ -318,6 +319,7 @@ export default function Favorites() {
           )}
         </div>
       </section>
+      <Footer />
     </>
   );
 }
