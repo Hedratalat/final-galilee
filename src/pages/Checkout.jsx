@@ -6,6 +6,7 @@ import Footer from "../components/Footer/Footer";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 /* =======================
    Zod Schema
@@ -41,33 +42,82 @@ const checkoutSchema = z.object({
 const egyptCities = [
   "Cairo",
   "Giza",
-  "Alexandria",
-  "Qalyubia",
-  "Sharqia",
-  "Dakahlia",
-  "Gharbia",
-  "Monufia",
-  "Kafr El Sheikh",
-  "Beheira",
-  "Damietta",
-  "Port Said",
-  "Ismailia",
-  "Suez",
   "Fayoum",
   "Beni Suef",
   "Minya",
   "Assiut",
   "Sohag",
   "Qena",
+  "Nag Hammadi",
   "Luxor",
   "Aswan",
-  "Red Sea",
-  "New Valley",
-  "Matrouh",
-  "North Sinai",
-  "South Sinai",
+  "Alexandria",
+  "Tanta",
+  "Mahalla",
+  "Mansoura",
+  "Suez",
+  "Beheira",
+  "Sharqia",
+  "10th of Ramadan",
+  "Port Said",
+  "Ismailia",
+  "Damietta",
+  "Kafr El Sheikh",
+  "Qalyubia",
+  "Al Gharbia",
+  "Monufia",
+  "Dakahlia",
+  "North Coast",
+  "Marsa Matrouh",
+  "Hurghada",
+  "Sharm El Sheikh",
+  "Marsa Alam",
+  "Banha",
+  "Badrashin",
+  "Hawamdeya",
+  "Saqqara",
+  "Badr City",
 ];
 
+const shippingFees = {
+  Cairo: 90,
+  Giza: 90,
+  Fayoum: 100,
+  "Beni Suef": 100,
+  Minya: 100,
+  Assiut: 100,
+  Sohag: 100,
+  Qena: 100,
+  "Nag Hammadi": 100,
+  Luxor: 105,
+  Aswan: 115,
+  Alexandria: 85,
+  Tanta: 90,
+  Mahalla: 90,
+  Mansoura: 90,
+  Suez: 90,
+  Beheira: 90,
+  Sharqia: 90,
+  "10th of Ramadan": 90,
+  "Port Said": 90,
+  Ismailia: 90,
+  Damietta: 90,
+  "Kafr El Sheikh": 90,
+  Qalyubia: 90,
+  "Al Gharbia": 90,
+  Monufia: 90,
+  Dakahlia: 90,
+  "North Coast": 125,
+  "Marsa Matrouh": 125,
+  Hurghada: 135,
+  "Sharm El Sheikh": 135,
+  "Marsa Alam": 135,
+  Banha: 85,
+  Badrashin: 85,
+  Hawamdeya: 85,
+  Saqqara: 85,
+  "Badr City": 85,
+};
 //    Get Total From Cart
 const getCartTotal = () => {
   const cart = JSON.parse(localStorage.getItem("cart")) || [];
@@ -85,6 +135,7 @@ const getCartTotal = () => {
 export default function Checkout() {
   const navigate = useNavigate();
   const total = getCartTotal();
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const {
     register,
@@ -97,10 +148,24 @@ export default function Checkout() {
   });
 
   const paymentMethod = watch("paymentMethod");
+  const selectedCity = watch("city");
+
+  const shippingCost = selectedCity ? shippingFees[selectedCity] || 0 : 0;
+  const grandTotal = total + shippingCost;
 
   const onSubmit = (data) => {
-    console.log("ORDER DATA:", data);
-    toast.success("Order placed successfully 🎉");
+    const orderData = {
+      ...data,
+      subtotal: total,
+      shippingFee: shippingCost,
+      grandTotal: grandTotal,
+    };
+    if (data.paymentMethod === "cash") {
+      setShowSuccessMessage(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      toast.success("Order placed successfully");
+    }
   };
 
   return (
@@ -119,6 +184,30 @@ export default function Checkout() {
           Fast Checkout Process
         </motion.h2>
         <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl p-8 md:p-10 ">
+          {showSuccessMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 bg-green-50 border-2 border-green-500 rounded-2xl p-6"
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-3xl">✅</span>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-green-800 mb-2">
+                    Order Confirmed Successfully
+                  </h3>
+                  <p className="text-green-700 leading-relaxed">
+                    Your order has been placed successfully. We will contact you
+                    on WhatsApp to confirm your order. Payment will be collected
+                    upon delivery (Cash on Delivery).
+                  </p>
+                  <p className="text-green-600 text-sm mt-3 font-semibold">
+                    Total Amount: {grandTotal.toFixed(2)} EGP
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Full Name */}
             <div>
@@ -302,13 +391,31 @@ export default function Checkout() {
             </div>
 
             {/* ================= Total ================= */}
-            <div className="border-t pt-6 flex justify-between items-center">
-              <span className="text-lg font-semibold text-darkBlue">
-                Total Amount
-              </span>
-              <span className="text-3xl font-extrabold text-orange">
-                {total.toFixed(2)} EGP
-              </span>
+            <div className="border-t pt-6 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-base text-gray-600">Subtotal</span>
+                <span className="text-lg font-semibold text-darkBlue">
+                  {total.toFixed(2)} EGP
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-base text-gray-600">Shipping Fee</span>
+                <span className="text-lg font-semibold text-darkBlue">
+                  {selectedCity
+                    ? `${shippingCost.toFixed(2)} EGP`
+                    : "Select city first"}
+                </span>
+              </div>
+
+              <div className="border-t pt-3 flex justify-between items-center">
+                <span className="text-lg font-bold text-darkBlue">
+                  Total Amount
+                </span>
+                <span className="text-3xl font-extrabold text-orange">
+                  {grandTotal.toFixed(2)} EGP
+                </span>
+              </div>
             </div>
 
             {/* Submit */}

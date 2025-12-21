@@ -19,9 +19,22 @@ export default function HeroSection() {
     const interval = setInterval(() => {
       setCurrentImgIndex((prev) => (prev + 1) % images.length);
     }, 3000);
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    const handleDragStart = (e) => {
+      e.preventDefault();
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("dragstart", handleDragStart);
     return () => {
       clearTimeout(fadeTimer);
       clearInterval(interval);
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("dragstart", handleDragStart);
     };
   }, [images.length]);
 
@@ -200,14 +213,16 @@ export default function HeroSection() {
           <div className="relative z-10 flex items-center justify-center w-full">
             <AnimatePresence mode="wait">
               <motion.img
-                key={currentImgIndex} // مهم جداً عشان AnimatePresence تعرف الصورة اتغيرت
+                key={currentImgIndex}
                 src={images[currentImgIndex]}
                 alt="Character"
+                onContextMenu={(e) => e.preventDefault()}
+                onDragStart={(e) => e.preventDefault()}
                 className="w-64 h-64 sm:w-64 sm:h-64 lg:w-[350px] lg:h-[350px] object-contain"
-                initial={{ opacity: 0, scale: 0.95, y: 20 }} // البداية
-                animate={{ opacity: 1, scale: 1, y: 0 }} // النهاية
-                exit={{ opacity: 0, scale: 0.95, y: -20 }} // لما تختفي الصورة
-                transition={{ duration: 0.8, ease: "easeInOut" }} // سرعة وسلاسة
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -20 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
               />
             </AnimatePresence>
           </div>
