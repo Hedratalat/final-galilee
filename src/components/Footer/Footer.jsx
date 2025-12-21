@@ -136,10 +136,8 @@ export default function Footer() {
               <Mail className="w-4 h-4 text-orange" /> galilee.contact@gmail.com
             </p>
             <p className="flex justify-center md:justify-start items-center gap-2">
-              <Clock className="w-4 h-4 text-orange" /> Sat–Fri: 9:00 AM - 6:00
-              PM
+              <Clock className="w-4 h-4 text-orange" /> Open 24/7
             </p>
-            <p className="ml-0 md:ml-6">Sunday: Closed</p>
           </div>
         </div>
       </div>
