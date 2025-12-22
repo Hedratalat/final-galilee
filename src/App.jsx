@@ -13,6 +13,7 @@ const About = lazy(() => import("./pages/About"));
 const Products = lazy(() => import("./pages/Products"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
+const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Overview = lazy(() => import("./pages/Overview"));
 const AddProducts = lazy(() => import("./pages/AddProducts"));
@@ -26,6 +27,7 @@ const MessageDash = lazy(() => import("./pages/MessageDash"));
 const ButtonScroll = lazy(() =>
   import("./components/ButtonScroll/ButtonScroll")
 );
+
 // Spinner component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
@@ -48,6 +50,7 @@ function App() {
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
