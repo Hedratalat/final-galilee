@@ -45,15 +45,12 @@ export default function Navbar() {
       setCartCount(localCart.length);
     };
 
-    // تحديث أول مرة
     updateCounts();
 
-    // الاستماع للتغييرات من tabs أخرى أو dispatch event
     window.addEventListener("storage", updateCounts);
     window.addEventListener("favoritesUpdated", updateCounts);
     window.addEventListener("cartUpdated", updateCounts);
 
-    // إذا المستخدم مسجل دخول، نعمل merge Firebase مع localStorage
     let unsubscribeFav = () => {};
     let unsubscribeCart = () => {};
 
@@ -118,6 +115,7 @@ export default function Navbar() {
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
               { name: "Products", to: "/products" },
+              { name: "My Orders", to: "/myorders" },
               { name: "Contact", to: "/contact" },
             ].map((item) => (
               <li key={item.name}>
@@ -314,6 +312,7 @@ export default function Navbar() {
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
               { name: "Products", to: "/products" },
+              { name: "My Orders", to: "/myorders" },
               { name: "Contact", to: "/contact" },
             ].map((item) => (
               <li key={item.name}>

@@ -76,7 +76,7 @@ export default function OrderSuccess() {
               Track your orders anytime:
             </p>
             <button
-              onClick={() => navigate("/orders")}
+              onClick={() => navigate("/myorders")}
               className="bg-orange hover:bg-orange/90 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition-all transform hover:scale-105"
             >
               View My Orders

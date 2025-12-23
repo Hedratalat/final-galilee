@@ -13,6 +13,7 @@ const About = lazy(() => import("./pages/About"));
 const Products = lazy(() => import("./pages/Products"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Overview = lazy(() => import("./pages/Overview"));
@@ -24,6 +25,7 @@ const DashBoardLayout = lazy(() =>
 const FeedbackDash = lazy(() => import("./pages/FeedbackDash"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MessageDash = lazy(() => import("./pages/MessageDash"));
+const OrdersDash = lazy(() => import("./pages/OrdersDash"));
 const ButtonScroll = lazy(() =>
   import("./components/ButtonScroll/ButtonScroll")
 );
@@ -49,6 +51,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/myorders" element={<MyOrders />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/login" element={<Login />} />
@@ -69,9 +72,9 @@ function App() {
               <Route path="productsManagement" element={<ManageProducts />} />
               <Route path="Feedback" element={<FeedbackDash />} />
               <Route path="message" element={<MessageDash />} />
+              <Route path="ordersDah" element={<OrdersDash />} />
 
               {/* <Route path="userDash" element={<UserDash />} />
-              <Route path="ordersDah" element={<OrdersDah />} />
               <Route path="feedback" element={<FeedbackDash />} /> */}
             </Route>
           </Routes>

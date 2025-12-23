@@ -272,9 +272,13 @@ export default function Checkout() {
   const onSubmit = async (data) => {
     try {
       const cartItems = getCartData();
-
+      let paymentMethodForDB = data.paymentMethod;
+      if (data.paymentMethod === "vodafone") {
+        paymentMethodForDB = "vodafone cash";
+      }
       const orderData = {
         ...data,
+        paymentMethod: paymentMethodForDB,
         vodafoneScreenshot: vodafonePreview,
         items: cartItems,
 
