@@ -531,7 +531,7 @@ export default function Checkout() {
                   </p>
                   <div className="bg-white rounded-lg p-3 text-center">
                     <p className="text-2xl font-black text-green-900 tracking-wider">
-                      01027539203
+                      01554497569
                     </p>
                     <p className="text-xs text-green-700 mt-1">
                       Store Account Number
