@@ -28,6 +28,13 @@ export default function Products() {
   });
 
   useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [currentPage]);
+
+  useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
       const cats = [];
       const data = snap.docs.map((doc) => {
