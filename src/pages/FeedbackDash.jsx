@@ -32,7 +32,7 @@ export default function FeedbackDash() {
       toast.success("Feedback approved!");
     } catch (err) {
       toast.error("Error approving feedback");
-      console.error(err);
+      console.error("error");
     } finally {
       setLoadingId(null);
     }
@@ -46,7 +46,7 @@ export default function FeedbackDash() {
       setSelectedDelete(null);
     } catch (err) {
       toast.error("Error deleting feedback");
-      console.error(err);
+      console.error("error");
     } finally {
       setLoadingId(null);
     }

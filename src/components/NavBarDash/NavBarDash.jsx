@@ -12,7 +12,7 @@ export default function NavBarDash({ onMenuClick }) {
       await signOut(auth);
       navigate("/");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("Logout error:");
     }
   };
 

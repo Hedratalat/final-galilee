@@ -109,7 +109,7 @@ export default function Cart() {
       updateDoc(userCartRef, {
         cart: mergedCart,
         cartQuantities: mergedQuantities,
-      }).catch(console.log);
+      }).catch(() => {});
     });
 
     return () => unsubscribe();
@@ -134,7 +134,7 @@ export default function Cart() {
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
       updateDoc(userCartRef, { cartQuantities: updatedQuantities }).catch(
-        console.log
+        () => {}
       );
     }
   };
@@ -157,7 +157,7 @@ export default function Cart() {
       updateDoc(userCartRef, {
         cart: cartIds,
         cartQuantities: updatedQuantities,
-      }).catch(console.log);
+      }).catch(() => {});
     }
 
     toast.error(`Removed ${name} from cart`, {

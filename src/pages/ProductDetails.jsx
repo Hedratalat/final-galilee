@@ -70,7 +70,7 @@ export default function ProductDetails() {
         setLoading(false);
       },
       (error) => {
-        console.error("Error fetching product:", error);
+        console.error("Error fetching product");
         toast.error("Error loading product");
         setLoading(false);
       }
@@ -98,9 +98,7 @@ export default function ProductDetails() {
 
       setFavorites(mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
-      updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
-        console.log("Error updating favorites:", err)
-      );
+      updateDoc(userFavRef, { favorites: mergedFav }).catch(() => {});
     });
 
     return () => unsubscribe();
@@ -125,9 +123,7 @@ export default function ProductDetails() {
 
       setCart(mergedCart.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
-      updateDoc(userCartRef, { cart: mergedCart }).catch((err) =>
-        console.log("Error updating cart:", err)
-      );
+      updateDoc(userCartRef, { cart: mergedCart }).catch(() => {});
     });
 
     return () => unsubscribe();
@@ -150,9 +146,7 @@ export default function ProductDetails() {
 
     if (user) {
       const userFavRef = doc(db, "Users", user.uid);
-      updateDoc(userFavRef, { favorites: favIds }).catch((err) =>
-        console.log("Error updating favorites:", err)
-      );
+      updateDoc(userFavRef, { favorites: favIds }).catch(() => {});
     }
 
     if (updatedFavorites[product.id]) {
@@ -178,9 +172,7 @@ export default function ProductDetails() {
 
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
-      updateDoc(userCartRef, { cart: cartIds }).catch((err) =>
-        console.log("Error updating cart:", err)
-      );
+      updateDoc(userCartRef, { cart: cartIds }).catch(() => {});
     }
 
     if (updatedCart[product.id]) {

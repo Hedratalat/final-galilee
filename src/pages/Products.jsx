@@ -92,9 +92,7 @@ export default function Products() {
       setFavorites(mergedFav.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
       // تحديث Firebase
-      updateDoc(userFavRef, { favorites: mergedFav }).catch((err) =>
-        console.log("Error updating favorites:", err)
-      );
+      updateDoc(userFavRef, { favorites: mergedFav }).catch(() => {});
     });
 
     return () => unsubscribe();
@@ -129,9 +127,7 @@ export default function Products() {
       setCart(mergedCart.reduce((acc, id) => ({ ...acc, [id]: true }), {}));
 
       // تحديث Firebase
-      updateDoc(userCartRef, { cart: mergedCart }).catch((err) =>
-        console.log("Error updating cart:", err)
-      );
+      updateDoc(userCartRef, { cart: mergedCart }).catch(() => {});
     });
 
     return () => unsubscribe();
@@ -153,9 +149,7 @@ export default function Products() {
     // حفظ Firebase لو مسجّل دخول
     if (user) {
       const userFavRef = doc(db, "Users", user.uid);
-      updateDoc(userFavRef, { favorites: favIds }).catch((err) =>
-        console.log("Error updating favorites:", err)
-      );
+      updateDoc(userFavRef, { favorites: favIds }).catch(() => {});
     }
 
     // toast مباشر للمستخدم
@@ -184,9 +178,7 @@ export default function Products() {
     // Firebase
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
-      updateDoc(userCartRef, { cart: cartIds }).catch((err) =>
-        console.log("Error updating cart:", err)
-      );
+      updateDoc(userCartRef, { cart: cartIds }).catch(() => {});
     }
 
     // Toast

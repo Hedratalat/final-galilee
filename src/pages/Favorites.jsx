@@ -120,7 +120,7 @@ export default function Favorites() {
     // تحديث Firebase لو المستخدم مسجل دخول
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
-      updateDoc(userCartRef, { cart: cartIds }).catch(console.log);
+      updateDoc(userCartRef, { cart: cartIds }).catch(() => {});
     }
 
     // toast

@@ -35,7 +35,7 @@ export default function OrdersDash() {
     try {
       await updateDoc(doc(db, "orders", orderId), { status: newStatus });
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("Error updating status:");
     }
   };
 
