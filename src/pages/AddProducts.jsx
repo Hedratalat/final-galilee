@@ -8,6 +8,7 @@ export default function AddProducts() {
   const [productData, setProductData] = useState({
     name: "",
     description: "",
+    descriptionDetails: "",
     price: "",
     discountPrice: "",
     category: "",
@@ -15,7 +16,9 @@ export default function AddProducts() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [file, setFile] = useState(null);
+  const [imagesFiles, setImagesFiles] = useState([]);
+  const [videoFile, setVideoFile] = useState(null);
+  const [mainImageFile, setMainImageFile] = useState(null);
 
   const handleChange = (e) => {
     setProductData({
@@ -24,54 +27,88 @@ export default function AddProducts() {
     });
   };
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleImagesChange = (e) => {
+    setImagesFiles((prev) => [...prev, ...Array.from(e.target.files)]);
+  };
+
+  const handleVideoChange = (e) => {
+    setVideoFile(e.target.files[0]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return toast.error("Please select an image");
+
+    if (!mainImageFile) {
+      return toast.error("Please select main image");
+    }
 
     setLoading(true);
 
     try {
-      // Cloudinary
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "galilee_upload");
-      formData.append("folder", "galilee_uploads");
+      /* ===== Upload Main Image ===== */
+      const mainImageData = new FormData();
+      mainImageData.append("file", mainImageFile);
+      mainImageData.append("upload_preset", "galilee_upload");
+      mainImageData.append("folder", "galilee_uploads/main");
 
-      const res = await fetch(
+      const mainImageRes = await fetch(
         "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
         {
           method: "POST",
-          body: formData,
+          body: mainImageData,
         }
       );
 
-      const data = await res.json();
+      const mainImage = await mainImageRes.json();
 
-      // Firebase
-      const productRef = doc(collection(db, "Products"));
-      await setDoc(productRef, {
+      /* ===== Upload Product Images ===== */
+      const imagesUrls = [];
+
+      for (const image of imagesFiles) {
+        const formData = new FormData();
+        formData.append("file", image);
+        formData.append("upload_preset", "galilee_upload");
+        formData.append("folder", "galilee_uploads/gallery");
+
+        const res = await fetch(
+          "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
+          { method: "POST", body: formData }
+        );
+
+        const data = await res.json();
+        imagesUrls.push(data.secure_url);
+      }
+
+      /* ===== Upload Video (Optional) ===== */
+      let videoUrl = "";
+
+      if (videoFile) {
+        const videoData = new FormData();
+        videoData.append("file", videoFile);
+        videoData.append("upload_preset", "galilee_upload");
+        videoData.append("folder", "galilee_uploads/videos");
+
+        const res = await fetch(
+          "https://api.cloudinary.com/v1_1/dbxclj6yt/video/upload",
+          { method: "POST", body: videoData }
+        );
+
+        const data = await res.json();
+        videoUrl = data.secure_url;
+      }
+
+      /* ===== Save To Firebase ===== */
+      await setDoc(doc(collection(db, "Products")), {
         ...productData,
-        imageUrl: data.secure_url,
+        imageUrl: mainImage.secure_url,
+        images: imagesUrls,
+        videoUrl,
         createdAt: serverTimestamp(),
       });
 
       toast.success("Product added successfully");
-      setProductData({
-        name: "",
-        description: "",
-        price: "",
-        discountPrice: "",
-        category: "",
-        imageUrl: "",
-      });
-      setFile(null);
     } catch (error) {
-      console.error(error);
-      toast.error("Error adding product.");
+      toast.error("Error adding product");
     } finally {
       setLoading(false);
     }
@@ -111,6 +148,21 @@ export default function AddProducts() {
             placeholder="Enter product description"
             onChange={handleChange}
             value={productData.description}
+            className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
+          />
+        </div>
+
+        {/* Details Description */}
+        <div className="flex flex-col">
+          <label className="text-darkBlue font-medium mb-2">
+            Product Details
+          </label>
+          <textarea
+            name="descriptionDetails"
+            rows="6"
+            placeholder="Enter detailed product information (materials, size, usage...)"
+            onChange={handleChange}
+            value={productData.descriptionDetails}
             className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
           />
         </div>
@@ -157,17 +209,46 @@ export default function AddProducts() {
             className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
           />
         </div>
-
-        {/* Image Upload */}
+        {/* Card Image Upload */}
         <div className="flex flex-col">
-          <label className="text-darkBlue font-medium mb-2">
-            Product Image
-          </label>
+          <label className="text-darkBlue font-medium mb-2">Main Image</label>
+
           <input
             type="file"
             accept="image/*"
-            onChange={handleFileChange}
-            className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+            onChange={(e) => setMainImageFile(e.target.files[0])}
+            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+      file:mr-3 file:py-2 file:px-4 file:rounded-md 
+      file:border-0 file:text-white file:bg-orange 
+      file:hover:bg-blue file:cursor-pointer cursor-pointer"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="font-medium text-darkBlue mb-2">
+            Product Images (Gallery)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImagesChange}
+            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
+            file:mr-3 file:py-2 file:px-4 file:rounded-md 
+            file:border-0 file:text-white file:bg-orange 
+            file:hover:bg-blue file:cursor-pointer cursor-pointer"
+          />
+        </div>
+
+        <div className="flex flex-col">
+          <label className="font-medium text-darkBlue mb-2">
+            Product Video (optional)
+          </label>
+          <input
+            type="file"
+            accept="video/*"
+            onChange={handleVideoChange}
+            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
             file:mr-3 file:py-2 file:px-4 file:rounded-md 
             file:border-0 file:text-white file:bg-orange 
             file:hover:bg-blue file:cursor-pointer cursor-pointer"

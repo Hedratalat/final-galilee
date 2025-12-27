@@ -19,6 +19,13 @@ export default function Favorites() {
     return localCart.reduce((acc, id) => ({ ...acc, [id]: true }), {});
   });
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
+
   // Fetch products
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "Products"), (snap) => {

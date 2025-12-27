@@ -82,10 +82,12 @@ export default function FeedbackDash() {
             }`}
           >
             <div className="mb-4">
-              <p className="text-gray-900 font-semibold border-b border-gray-300 pb-1 mb-4">
+              <p className="text-gray-900 font-semibold border-b border-gray-300 pb-1 mb-2">
                 {fb.name}
-                <p className="text-gray-900  text-sm mt-1">{fb.email}</p>
               </p>
+              <span className="text-gray-900 text-sm mt-1 block">
+                {fb.email}
+              </span>
               <p className="text-gray-700 mt-2">{fb.message}</p>
               {fb.createdAt?.seconds && (
                 <p className="text-gray-500 text-xs mt-2">

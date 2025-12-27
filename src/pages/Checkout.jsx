@@ -6,7 +6,7 @@ import Footer from "../components/Footer/Footer";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
@@ -213,6 +213,13 @@ export default function Checkout() {
 
   const shippingCost = selectedCity ? shippingFees[selectedCity] || 0 : 0;
   const grandTotal = total + shippingCost;
+
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
 
   // Upload Vodafone Screenshot to Cloudinary
   const handleVodafoneUpload = async (e) => {

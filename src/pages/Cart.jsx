@@ -31,6 +31,12 @@ export default function Cart() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
   // Fetch products
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {

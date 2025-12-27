@@ -37,7 +37,7 @@ export default function Footer() {
             special.
           </p>
 
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <p className="font-medium text-white text-lg mb-2">Follow Us</p>
             <div className="flex justify-start space-x-3">
               <a
@@ -132,9 +132,11 @@ export default function Footer() {
             <p className="flex justify-center md:justify-start items-center gap-2">
               <Phone className="w-4 h-4 text-orange" /> 01027539203
             </p>
-            <p className="flex justify-center md:justify-start items-center gap-2">
-              <Mail className="w-4 h-4 text-orange" /> galilee.contact@gmail.com
+            <p className="flex flex-wrap justify-center md:justify-start items-center gap-2 break-all">
+              <Mail className="w-4 h-4 text-orange shrink-0" />
+              galilee.contact@gmail.com
             </p>
+
             <p className="flex justify-center md:justify-start items-center gap-2">
               <Clock className="w-4 h-4 text-orange" /> Open 24/7
             </p>
@@ -143,7 +145,7 @@ export default function Footer() {
       </div>
 
       {/* Mobile Social */}
-      <div className="block md:hidden text-center mt-4">
+      <div className="block lg:hidden text-center mt-4">
         <p className="font-medium text-white text-lg mb-2">Follow Us</p>
         <div className="flex justify-center space-x-3">
           <a

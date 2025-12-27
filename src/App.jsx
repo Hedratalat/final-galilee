@@ -11,11 +11,13 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const Products = lazy(() => import("./pages/Products"));
+const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
 const Contact = lazy(() => import("./pages/Contact"));
+const ProtectedRoute = lazy(() => import("./pages/ProtectedRoute"));
 const Overview = lazy(() => import("./pages/Overview"));
 const AddProducts = lazy(() => import("./pages/AddProducts"));
 const ManageProducts = lazy(() => import("./pages/ManageProducts"));
@@ -48,6 +50,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/cart" element={<Cart />} />
@@ -61,13 +64,12 @@ function App() {
             <Route
               path="/dashboard"
               element={
-                // <ProtectedRoute>
-                <DashBoardLayout />
-                // </ProtectedRoute>
+                <ProtectedRoute>
+                  <DashBoardLayout />
+                </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="Overview" replace />} />
-              <Route path="overview" element={<Overview />} />
+              <Route index element={<Navigate to="addProducts" replace />} />
               <Route path="addProducts" element={<AddProducts />} />
               <Route path="productsManagement" element={<ManageProducts />} />
               <Route path="Feedback" element={<FeedbackDash />} />

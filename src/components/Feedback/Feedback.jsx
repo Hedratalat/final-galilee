@@ -92,7 +92,10 @@ export default function Feedback() {
   };
 
   return (
-    <section className="min-h-screen py-12 font-poppins bg-gray-50">
+    <section
+      id="feedback"
+      className="min-h-screen py-12 font-poppins bg-gray-50"
+    >
       <div className="max-w-7xl mx-auto px-6 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 50 }}

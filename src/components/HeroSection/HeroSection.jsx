@@ -107,7 +107,7 @@ export default function HeroSection() {
           <div className="flex flex-wrap gap-2 sm:gap-3 items-center mb-4 justify-center lg:justify-start cursor-pointer">
             {[
               { name: "Categories", link: "#categories-section" },
-              { name: "Testimonials", link: "/testimonials" },
+              { name: "Testimonials", link: "#feedback" },
               { name: "Contact", link: "/contact" },
             ].map(({ name, link }, idx) => (
               <a

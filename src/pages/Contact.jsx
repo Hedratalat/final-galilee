@@ -7,32 +7,97 @@ import toast from "react-hot-toast";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
+import { z } from "zod";
+
+// Zod Schema
+const contactSchema = z.object({
+  fullName: z
+    .string()
+    .min(3, "Please enter a valid name.")
+    .max(50, "Please enter a valid name.")
+    .regex(/^[a-zA-Z\s\u0600-\u06FF]+$/, "Name should only contain letters"),
+  email: z
+    .string()
+    .email("Please enter a valid email address.")
+    .refine(
+      (val) => {
+        const lowerVal = val.toLowerCase();
+        return /^[a-zA-Z][a-zA-Z0-9._%+-]*@gmail\.(com|net|org)(\.eg)?$/.test(
+          lowerVal
+        );
+      },
+      { message: "Email must be a valid Gmail address" }
+    ),
+  message: z
+    .string()
+    .min(10, "Message must be at least 10 characters")
+    .max(500, "Message must be less than 500 characters"),
+});
 
 export default function Contact() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    message: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
+    setErrors({});
+    setIsSubmitting(true);
+
+    const result = contactSchema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors = {};
+      result.error.issues.forEach((err) => {
+        const fieldName = err.path[0];
+        fieldErrors[fieldName] = err.message;
+      });
+
+      setErrors(fieldErrors);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       await addDoc(collection(db, "Messages"), {
-        fullName: name,
-        email: email,
-        message: message,
+        ...result.data,
         createdAt: new Date().toISOString(),
       });
+
       toast.success("Message sent successfully");
-      setName("");
-      setEmail("");
-      setMessage("");
-    } catch (error) {
-      console.error("Error sending message:", error);
+
+      setFormData({
+        fullName: "",
+        email: "",
+        message: "",
+      });
+    } catch (err) {
       toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -72,51 +137,91 @@ export default function Contact() {
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
               className="space-y-4 sm:space-y-2 order-2 md:order-1"
+              noValidate
             >
               <div>
-                <label className="text-gray-700 font-poppins font-semibold">
+                <label className="block text-gray-700 font-poppins font-semibold mb-2">
                   Full Name
                 </label>
                 <input
                   type="text"
-                  className="w-full mt-2 p-3 sm:p-4 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue transition-all duration-300"
+                  data-gramm="false"
+                  data-gramm_editor="false"
+                  name="fullName"
+                  className={`w-full p-3 sm:p-4 rounded-2xl border ${
+                    errors.fullName
+                      ? "border-red-500 ring-2 ring-red-200"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue transition-all duration-300`}
                   placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
+                  value={formData.fullName}
+                  onChange={handleChange}
                 />
+                {errors.fullName && (
+                  <p className="text-red-600 text-sm mt-2 font-poppins font-medium">
+                    {errors.fullName}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-gray-700 font-poppins font-semibold">
+                <label className="block text-gray-700 font-poppins font-semibold mb-2">
                   Email Address
                 </label>
                 <input
                   type="email"
-                  className="w-full mt-2 p-3 sm:p-4 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue transition-all duration-300"
+                  data-gramm="false"
+                  data-gramm_editor="false"
+                  name="email"
+                  className={`w-full p-3 sm:p-4 rounded-2xl border ${
+                    errors.email
+                      ? "border-red-500 ring-2 ring-red-200"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-blue transition-all duration-300`}
                   placeholder="example@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
+                  value={formData.email}
+                  onChange={handleChange}
                 />
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-2 font-poppins font-medium">
+                    {errors.email}
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-gray-700 font-poppins font-semibold">
+                <label className="block text-gray-700 font-poppins font-semibold mb-2">
                   Message
                 </label>
                 <textarea
+                  data-gramm="false"
+                  data-gramm_editor="false"
                   rows="5"
-                  className="w-full mt-2 p-3 sm:p-4 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange transition-all duration-300"
+                  name="message"
+                  className={`w-full p-3 sm:p-4 rounded-2xl border ${
+                    errors.message
+                      ? "border-red-500 ring-2 ring-red-200"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-orange transition-all duration-300 resize-none`}
                   placeholder="Write your message..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
+                  value={formData.message}
+                  onChange={handleChange}
                 />
+                {errors.message && (
+                  <p className="text-red-600 text-sm mt-2 font-poppins font-medium">
+                    {errors.message}
+                  </p>
+                )}
               </div>
 
-              <button className="w-full bg-orange text-white font-poppins font-bold py-3 sm:py-4 rounded-2xl shadow-lg hover:bg-darkBlue transition duration-300">
-                Send Message
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full bg-orange text-white font-poppins font-bold py-3 sm:py-4 rounded-2xl shadow-lg hover:bg-darkBlue transition duration-300 ${
+                  isSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isSubmitting ? "Sending..." : "Send Message"}
               </button>
             </motion.form>
 

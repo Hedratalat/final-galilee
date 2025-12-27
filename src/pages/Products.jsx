@@ -8,6 +8,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import toast from "react-hot-toast";
 import { FaShoppingCart } from "react-icons/fa";
 import Footer from "../components/Footer/Footer";
+import { Link } from "react-router-dom";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -35,7 +36,7 @@ export default function Products() {
         return {
           id: doc.id,
           name: d.name,
-          image: d.imageUrl,
+          image: d.imageCard || d.imageUrl,
           price: d.discountPrice ? d.discountPrice : d.price,
           realPrice: d.price,
           category: d.category,
@@ -137,7 +138,9 @@ export default function Products() {
   }, [user]);
 
   // toggle favorite
-  const toggleFavorite = (id, name) => {
+  const toggleFavorite = (e, id, name) => {
+    e.preventDefault();
+    e.stopPropagation();
     const updatedFavorites = { ...favorites, [id]: !favorites[id] };
     const favIds = Object.keys(updatedFavorites).filter(
       (key) => updatedFavorites[key]
@@ -167,7 +170,10 @@ export default function Products() {
   };
 
   // toggle cart
-  const toggleCart = (id, name) => {
+  const toggleCart = (e, id, name) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const updatedCart = { ...cart, [id]: !cart[id] };
     const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
 
@@ -317,68 +323,95 @@ export default function Products() {
               </motion.div>
             ) : (
               currentProducts.map((product, index) => (
-                <motion.div
+                <Link
                   key={product.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
-                    duration: 0.6,
-                    ease: "easeOut",
-                  }}
-                  viewport={{ once: true }}
-                  style={{ willChange: "transform, opacity" }}
-                  className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 mb-4"
+                  to={`/products/${product.id}`}
+                  className="block cursor-pointer"
                 >
-                  <div className="relative overflow-hidden rounded-t-3xl">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 "
-                    />
-
-                    <button
-                      onClick={() => toggleFavorite(product.id, product.name)}
-                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
-                    >
-                      {favorites[product.id] ? (
-                        <AiFillHeart className="h-6 w-6 text-orange" />
-                      ) : (
-                        <AiOutlineHeart className="h-6 w-6 text-gray-400" />
-                      )}
-                    </button>
-
-                    <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
-                      {product.category}
-                    </div>
-                  </div>
-
-                  <div className="p-6 flex flex-col justify-between flex-1 sm:h-64">
-                    <div>
-                      <h3 className="text-2xl font-semibold text-darkBlue">
-                        {product.name}
-                      </h3>
-                      <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
-                        {product.details}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-6">
-                      <div className="text-lg font-bold text-orange">
-                        {product.realPrice !== product.price ? (
-                          <>
-                            <span className="line-through text-gray-400 mr-2">
-                              {product.realPrice} EGP
-                            </span>
-                            {product.price} EGP
-                          </>
-                        ) : (
-                          `${product.price} EGP`
-                        )}
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{
+                      delay: index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
+                      duration: 0.6,
+                      ease: "easeOut",
+                    }}
+                    viewport={{ once: true }}
+                    style={{ willChange: "transform, opacity" }}
+                    className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 mb-4"
+                  >
+                    <div className="relative overflow-hidden rounded-t-3xl">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 "
+                      />
+                      <div
+                        className="
+    absolute inset-0
+    opacity-0 group-hover:opacity-100
+    flex items-center justify-center
+    transition-opacity duration-300    z-0
+  "
+                      >
+                        <span
+                          className="
+      bg-white text-darkBlue
+      px-6 py-3 rounded-full
+       shadow text-sm
+    "
+                        >
+                          View Details
+                        </span>
                       </div>
+
                       <button
-                        onClick={() => toggleCart(product.id, product.name)}
-                        className={`
+                        onClick={(e) =>
+                          toggleFavorite(e, product.id, product.name)
+                        }
+                        className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition z-50"
+                      >
+                        {favorites[product.id] ? (
+                          <AiFillHeart className="h-6 w-6 text-orange" />
+                        ) : (
+                          <AiOutlineHeart className="h-6 w-6 text-gray-400" />
+                        )}
+                      </button>
+
+                      <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
+                        {product.category}
+                      </div>
+                    </div>
+
+                    <div className="p-6 flex flex-col justify-between flex-1 sm:h-64">
+                      <div>
+                        <h3 className="text-2xl font-semibold text-darkBlue">
+                          {product.name}
+                        </h3>
+                        <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
+                          {product.details}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-6">
+                        <div className="text-lg font-bold text-orange">
+                          {product.realPrice !== product.price ? (
+                            <>
+                              <span className="line-through text-gray-400 mr-2">
+                                {product.realPrice} EGP
+                              </span>
+                              {product.price} EGP
+                            </>
+                          ) : (
+                            `${product.price} EGP`
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) =>
+                            toggleCart(e, product.id, product.name)
+                          }
+                          className={`
                             flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
                             ${
                               cart[product.id]
@@ -386,18 +419,19 @@ export default function Products() {
                                 : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
                             }
                           `}
-                      >
-                        {cart[product.id] ? (
-                          <>
-                            Remove <FaShoppingCart size={20} color="white" />
-                          </>
-                        ) : (
-                          "Add To Cart"
-                        )}
-                      </button>
+                        >
+                          {cart[product.id] ? (
+                            <>
+                              Remove <FaShoppingCart size={20} color="white" />
+                            </>
+                          ) : (
+                            "Add To Cart"
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </Link>
               ))
             )}
           </motion.div>

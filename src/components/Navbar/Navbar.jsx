@@ -105,12 +105,15 @@ export default function Navbar() {
               src={imgLogo}
               alt="Logo"
               className="h-20 w-auto transition-transform duration-300 hover:scale-105 cursor-pointer"
-              onClick={() => navigate("/")}
+              onClick={() => {
+                navigate("/");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
             />
           </div>
 
           {/* Navigation Links - Desktop */}
-          <ul className="hidden md:flex space-x-6 font-poppins  font-bold text-gray-700 text-xl">
+          <ul className="hidden lg:flex space-x-6 font-poppins  font-bold text-gray-700 text-base lg:text-xl">
             {[
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
@@ -131,7 +134,7 @@ export default function Navbar() {
           </ul>
 
           {/* Icons - Desktop */}
-          <div className="hidden md:flex items-center space-x-4 text-gray-700 text-xl">
+          <div className="hidden lg:flex items-center space-x-4 text-gray-700 text-xl">
             <div
               className="relative cursor-pointer "
               onClick={() => navigate("/favorites")}
@@ -217,7 +220,7 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-3 text-gray-700">
+          <div className="lg:hidden flex items-center gap-3 text-gray-700">
             {/* Icons in Mobile */}{" "}
             <div className="relative">
               <FaHeart
@@ -307,7 +310,7 @@ export default function Navbar() {
 
         {/* Mobile Menu Links */}
         {menuOpen && (
-          <ul className="md:hidden flex flex-col items-center space-y-4 py-4 font-poppins font-bold text-gray-700 text-xl">
+          <ul className="lg:hidden flex flex-col items-center space-y-4 py-4 font-poppins font-bold text-gray-700 text-xl">
             {[
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },

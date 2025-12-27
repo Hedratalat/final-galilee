@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 
 export default function SideBarDash({ isOpen, setIsOpen }) {
   const navItems = [
-    { to: "overview", label: "Overview" },
     { to: "addProducts", label: "Add Products" },
     { to: "productsManagement", label: "Manage Products" },
     { to: "ordersDah", label: "Orders" },
@@ -13,7 +12,6 @@ export default function SideBarDash({ isOpen, setIsOpen }) {
 
   return (
     <>
-      {/* خلفية الشفافية عند فتح القائمة */}
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}

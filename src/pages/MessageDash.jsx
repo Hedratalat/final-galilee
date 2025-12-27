@@ -57,12 +57,13 @@ export default function MessageDash() {
                        bg-white border border-gray-300"
           >
             <div className="mb-4">
-              <p className="text-gray-900 font-semibold border-b border-gray-300 pb-1 mb-4">
+              <p className="text-gray-900 font-semibold  pb-1 ">
                 {msg.fullName}
-                <p className="text-gray-900 text-sm mt-1">{msg.email}</p>
               </p>
-
-              <p className="text-gray-700 mt-2">{msg.message}</p>
+              <p className="text-gray-900 text-sm border-b border-gray-300 mt-1 ">
+                {msg.email}
+              </p>
+              <p className="text-gray-700 mt-4">{msg.message}</p>
 
               {msg.createdAt?.seconds && (
                 <p className="text-gray-500 text-xs mt-2">
