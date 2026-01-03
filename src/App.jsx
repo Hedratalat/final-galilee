@@ -1,7 +1,7 @@
 import { Suspense, lazy } from "react";
 import "./App.css";
 import "./index.css";
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 // Lazy load الصفحات
@@ -44,7 +44,7 @@ const LoadingSpinner = () => (
 function App() {
   return (
     <>
-      <HashRouter>
+      <BrowserRouter>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -81,7 +81,7 @@ function App() {
             </Route>
           </Routes>
         </Suspense>
-      </HashRouter>
+      </BrowserRouter>
       <ButtonScroll />
       <Toaster position="top-center" reverseOrder={false} />
     </>
