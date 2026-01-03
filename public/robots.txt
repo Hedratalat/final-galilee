@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://galilee-eg.com/sitemap.xml
