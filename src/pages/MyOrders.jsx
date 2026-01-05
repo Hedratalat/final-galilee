@@ -130,6 +130,10 @@ export default function MyOrders() {
                       {order.phone}
                     </p>
                     <p>
+                      <span className="font-semibold">WhatsApp:</span>{" "}
+                      {order.whatsapp}
+                    </p>
+                    <p>
                       <span className="font-semibold">Payment:</span>{" "}
                       {order.paymentMethod}
                     </p>

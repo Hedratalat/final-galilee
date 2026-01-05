@@ -23,7 +23,12 @@ const checkoutSchema = z
     phone: z
       .string()
       .regex(/^01[0125][0-9]{8}$/, "Phone must be a valid Egyptian number"),
-
+    whatsapp: z
+      .string()
+      .regex(
+        /^01[0125][0-9]{8}$/,
+        "Please enter a valid Egyptian WhatsApp number"
+      ),
     city: z.string().min(1, "Please select a city"),
     area: z
       .string()
@@ -266,7 +271,7 @@ export default function Checkout() {
 
       toast.success("Screenshot uploaded successfully");
     } catch (error) {
-      console.error("Upload error:", error);
+      console.error("Upload error");
       toast.error("Failed to upload screenshot. Please try again.");
     } finally {
       setUploadingVodafone(false);
@@ -301,7 +306,7 @@ export default function Checkout() {
 
       const docRef = await addDoc(collection(db, "orders"), orderData);
 
-      console.log("Order saved with ID:", docRef.id);
+      console.log("Order saved");
 
       localStorage.removeItem("cart");
       localStorage.removeItem("cartQuantities");
@@ -314,14 +319,14 @@ export default function Checkout() {
       setTimeout(() => {
         navigate("/order-success", {
           state: {
-            phone: orderData.phone,
+            whatsapp: orderData.whatsapp,
             paymentMethod: orderData.paymentMethod,
           },
         });
         window.scrollTo({ top: 0, behavior: "smooth" });
       }, 1500);
     } catch (error) {
-      console.error("Error saving order:", error);
+      console.error("Error saving order");
       toast.error("Failed to place order. Please try again.");
     }
   };
@@ -380,6 +385,27 @@ export default function Checkout() {
               {errors.phone && (
                 <p className="text-red-500 text-sm mt-2 ml-1">
                   {errors.phone.message}
+                </p>
+              )}
+            </div>
+
+            {/* WhatsApp */}
+            <div>
+              <label className="block font-semibold text-brownDark mb-1">
+                WhatsApp Number *
+              </label>
+              <input
+                {...register("whatsapp")}
+                placeholder="01XXXXXXXXX"
+                className={`w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 ${
+                  errors.whatsapp
+                    ? "border-red-400 focus:ring-red-300 "
+                    : "focus:ring-orange"
+                }`}
+              />
+              {errors.whatsapp && (
+                <p className="text-red-500 text-sm mt-2 ml-1">
+                  {errors.whatsapp.message}
                 </p>
               )}
             </div>

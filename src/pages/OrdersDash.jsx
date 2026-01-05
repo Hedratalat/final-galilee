@@ -233,6 +233,10 @@ export default function OrdersDash() {
                 <span className="font-semibold">Phone:</span> {order.phone}
               </p>
               <p>
+                <span className="font-semibold">whatsapp:</span>{" "}
+                {order.whatsapp}
+              </p>
+              <p>
                 <span className="font-semibold">Payment Method:</span>{" "}
                 {order.paymentMethod}
               </p>

@@ -11,7 +11,7 @@ export default function OrderSuccess() {
   const location = useLocation();
   const [paymentMethod, setPaymentMethod] = useState("cash"); // default
   const orderNumber = location.state?.orderNumber || "ORD-XXXX";
-  const phone = location.state?.phone || "your number";
+  const whatsapp = location.state?.whatsapp || "your number";
 
   useEffect(() => {
     if (location.state?.paymentMethod) {
@@ -66,7 +66,8 @@ export default function OrderSuccess() {
           <div className="mb-6">
             <p className="text-gray-700 mb-2 text-md">
               You will be contacted on WhatsApp at the number you provided (
-              <span className="font-bold">{phone}</span>) to confirm your order.
+              <span className="font-bold">{whatsapp}</span>) to confirm your
+              order.
             </p>
           </div>
 
