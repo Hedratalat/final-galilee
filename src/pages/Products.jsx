@@ -48,6 +48,7 @@ export default function Products() {
           realPrice: d.price,
           category: d.category,
           details: d.description,
+          order: d.order || null,
         };
       });
       setProducts(data);
@@ -212,12 +213,24 @@ export default function Products() {
     setCurrentPage(1);
   }, [search, categoryFilter, priceFilter]);
 
+  const sortedProducts = filteredProducts.sort((a, b) => {
+    // المنتجات اللي عندها order تظهر الأول
+    if (a.order !== null && b.order === null) return -1;
+    if (a.order === null && b.order !== null) return 1;
+
+    if (a.order !== null && b.order !== null) {
+      return a.order - b.order;
+    }
+
+    return 0;
+  });
+
   const productsPerPage = 6;
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   const endIndex = currentPage * productsPerPage;
   const startIndex = endIndex - productsPerPage;
-  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+  const currentProducts = sortedProducts.slice(startIndex, endIndex);
 
   return (
     <>

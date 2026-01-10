@@ -81,6 +81,13 @@ export default function ManageProducts() {
       const productRef = doc(db, "Products", editingId);
       let updatePayload = { ...updatedData };
 
+      // Convert order to number or null
+      if (updatedData.order !== undefined) {
+        updatePayload.order = updatedData.order
+          ? parseInt(updatedData.order)
+          : null;
+      }
+
       // Upload new card image if selected
       if (imageCardFile) {
         updatePayload.imageCard = await uploadToCloudinary(
@@ -121,7 +128,7 @@ export default function ManageProducts() {
       setVideoFile(null);
     } catch (err) {
       toast.error("Error updating product");
-      console.log(err);
+      console.log("err");
     } finally {
       setLoadingImg(false);
     }
@@ -230,6 +237,26 @@ export default function ManageProducts() {
                     placeholder="Category"
                     className="p-3 border rounded-xl"
                   />
+
+                  {/* Display Order */}
+                  <div className="flex flex-col">
+                    <label className="text-darkBlue font-medium mb-2 text-sm">
+                      Display Order (optional)
+                    </label>
+                    <input
+                      name="order"
+                      type="number"
+                      min="1"
+                      defaultValue={p.order || ""}
+                      onChange={handleChange}
+                      placeholder="Enter display order (e.g., 1, 2, 3...)"
+                      className="p-3 border rounded-xl"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Products with order numbers will appear first. Leave empty
+                      to show at the end.
+                    </p>
+                  </div>
 
                   {/* Card Image Upload */}
                   <div className="flex flex-col">
@@ -355,9 +382,16 @@ export default function ManageProducts() {
                       )}
                       EGP
                     </div>
-                    <span className="bg-blue text-white px-3 py-1 rounded-xl text-sm">
-                      {p.category}
-                    </span>
+                    <div className="flex gap-2">
+                      <span className="bg-blue text-white px-3 py-1 rounded-xl text-sm">
+                        {p.category}
+                      </span>
+                      {p.order && (
+                        <span className="bg-gray-200 text-darkBlue px-3 py-1 rounded-xl text-sm font-semibold">
+                          Order: {p.order}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Show media indicators */}

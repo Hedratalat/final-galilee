@@ -13,6 +13,7 @@ export default function AddProducts() {
     discountPrice: "",
     category: "",
     imageUrl: "",
+    order: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -103,6 +104,7 @@ export default function AddProducts() {
         imageUrl: mainImage.secure_url,
         images: imagesUrls,
         videoUrl,
+        order: productData.order ? parseInt(productData.order) : null,
         createdAt: serverTimestamp(),
       });
 
@@ -208,6 +210,25 @@ export default function AddProducts() {
             value={productData.category}
             className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
           />
+        </div>
+        {/* Order */}
+        <div className="flex flex-col">
+          <label className="text-darkBlue font-medium mb-2">
+            Display Order (optional)
+          </label>
+          <input
+            type="number"
+            name="order"
+            placeholder="Enter display order (e.g., 1, 2, 3...)"
+            onChange={handleChange}
+            value={productData.order}
+            min="1"
+            className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            Products with order numbers will appear first. Leave empty to show
+            at the end.
+          </p>
         </div>
         {/* Card Image Upload */}
         <div className="flex flex-col">
