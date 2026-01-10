@@ -49,10 +49,9 @@ export default function About() {
               transition={{ duration: 0.8, delay: 0.1 }}
               className="text-gray-700 text-lg leading-relaxed font-poppins mb-8"
             >
-              We are a leading notebook and stationery brand focused on
-              delivering high-quality products that combine creativity,
-              durability, and modern design. Our mission is to provide you with
-              tools that inspire you to write, dream, and create.
+              Galilee is a Christian brand that creates simple, interactive
+              products to help people build a real, personal relationship with
+              God and walk with Him every day.
             </motion.p>
           </div>
 
@@ -69,9 +68,9 @@ export default function About() {
                 Our Vision
               </h3>
               <p className="text-gray-600 leading-relaxed font-poppins">
-                To become the go-to brand for stationery lovers by crafting
-                unique designs and premium materials that elevate your writing
-                experience.
+                We dream of a generation of children and youth living their
+                faith as a real daily relationship with God, supported by simple
+                and interactive tools that guide their spiritual journey.
               </p>
             </motion.div>
 
@@ -87,9 +86,9 @@ export default function About() {
                 Our Mission
               </h3>
               <p className="text-gray-600 leading-relaxed font-poppins">
-                We aim to blend style with functionality through products
-                designed with attention to detail, ensuring every notebook
-                inspires your creativity.
+                To support servants with interactive Christian products that
+                make it easier to share faith and help build a true, loving
+                relationship between the people they serve and God.
               </p>
             </motion.div>
           </div>
@@ -106,7 +105,7 @@ export default function About() {
               Why Choose Us?
             </motion.h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
               {/* Item 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 60 }}
@@ -116,11 +115,11 @@ export default function About() {
                 className="bg-white shadow-lg p-8 rounded-3xl"
               >
                 <h3 className="text-xl font-semibold text-blue font-poppins mb-2">
-                  Premium Quality
+                  Simple & Interactive
                 </h3>
                 <p className="text-gray-600 font-poppins">
-                  We use high-grade materials to ensure long-lasting, durable
-                  notebooks.
+                  Our products are easy to use and engaging, making faith closer
+                  to the heart of children and youth.
                 </p>
               </motion.div>
 
@@ -133,10 +132,11 @@ export default function About() {
                 className="bg-white shadow-lg p-8 rounded-3xl"
               >
                 <h3 className="text-xl font-semibold text-orange font-poppins mb-2">
-                  Modern Designs
+                  Made for Ministry
                 </h3>
                 <p className="text-gray-600 font-poppins">
-                  Trendy, elegant, and creative designs for every style.
+                  Everything we create is designed to support servants and fit
+                  naturally into church and service activities.{" "}
                 </p>
               </motion.div>
 
@@ -149,11 +149,27 @@ export default function About() {
                 className="bg-white shadow-lg p-8 rounded-3xl"
               >
                 <h3 className="text-xl font-semibold text-darkBlue font-poppins mb-2">
-                  Fast Support
+                  Faith in Everyday Life
                 </h3>
                 <p className="text-gray-600 font-poppins">
-                  We're always here to help—customer satisfaction is our
-                  priority.
+                  We help turn faith into a daily lifestyle, not just a moment
+                  or an idea.
+                </p>
+              </motion.div>
+              {/* Item 4 */}
+              <motion.div
+                initial={{ opacity: 0, y: 60 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="bg-white shadow-lg p-8 rounded-3xl"
+              >
+                <h3 className="text-xl font-semibold text-blue font-poppins mb-2">
+                  Attractive & Encouraging Design
+                </h3>
+                <p className="text-gray-600 font-poppins">
+                  We use beautiful colors and friendly designs that encourage
+                  people to enjoy our products and keep using them.
                 </p>
               </motion.div>
             </div>
