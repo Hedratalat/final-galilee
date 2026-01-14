@@ -6,6 +6,7 @@ export default function SideBarDash({ isOpen, setIsOpen }) {
     { to: "addProducts", label: "Add Products" },
     { to: "productsManagement", label: "Manage Products" },
     { to: "ordersDah", label: "Orders" },
+    { to: "welcomePopUp", label: "Welcome Popup" },
     { to: "feedback", label: "Feedback" },
     { to: "message", label: "Message" },
   ];

@@ -1,7 +1,13 @@
 import { Suspense, lazy } from "react";
 import "./App.css";
 import "./index.css";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
 // Lazy load الصفحات
@@ -16,6 +22,9 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
+const WelcomePopup = lazy(() =>
+  import("./components/WelcomePopup/WelcomePopup")
+);
 const Contact = lazy(() => import("./pages/Contact"));
 const ProtectedRoute = lazy(() => import("./pages/ProtectedRoute"));
 const Overview = lazy(() => import("./pages/Overview"));
@@ -28,6 +37,7 @@ const FeedbackDash = lazy(() => import("./pages/FeedbackDash"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MessageDash = lazy(() => import("./pages/MessageDash"));
 const OrdersDash = lazy(() => import("./pages/OrdersDash"));
+const WelcomePopUPDash = lazy(() => import("./pages/WelcomePopUpDash"));
 const ButtonScroll = lazy(() =>
   import("./components/ButtonScroll/ButtonScroll")
 );
@@ -41,11 +51,25 @@ const LoadingSpinner = () => (
     ></div>
   </div>
 );
+
+function ConditionalWelcomePopup() {
+  const location = useLocation();
+
+  const excludedPaths = ["/dashboard", "/login", "/signup", "/verify-email"];
+
+  const shouldShowPopup = !excludedPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
+
+  return shouldShowPopup ? <WelcomePopup /> : null;
+}
 function App() {
   return (
     <>
       <BrowserRouter>
         <Suspense fallback={<LoadingSpinner />}>
+          <ConditionalWelcomePopup />
+
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
@@ -75,6 +99,7 @@ function App() {
               <Route path="Feedback" element={<FeedbackDash />} />
               <Route path="message" element={<MessageDash />} />
               <Route path="ordersDah" element={<OrdersDash />} />
+              <Route path="welcomePopUp" element={<WelcomePopUPDash />} />
 
               {/* <Route path="userDash" element={<UserDash />} />
               <Route path="feedback" element={<FeedbackDash />} /> */}
