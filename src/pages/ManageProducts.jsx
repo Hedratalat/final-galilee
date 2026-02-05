@@ -10,15 +10,16 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 
+const IMGBB_API_KEY = "ba0f20fbb48a75e4708def3f1f212acc";
+
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [updatedData, setUpdatedData] = useState({});
 
-  // Files for editing
-  const [imageCardFile, setImageCardFile] = useState(null);
-  const [imagesFiles, setImagesFiles] = useState([]);
-  const [videoFile, setVideoFile] = useState(null);
+  // URLs for editing
+  const [imageCardUrl, setImageCardUrl] = useState("");
+  const [galleryImageUrl, setGalleryImageUrl] = useState("");
 
   const [loadingImg, setLoadingImg] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -43,36 +44,18 @@ export default function ManageProducts() {
     });
   };
 
-  const handleImageCardChange = (e) => {
-    setImageCardFile(e.target.files[0]);
-  };
+  // دالة تحويل YouTube لـ embed
+  const convertToEmbedUrl = (url) => {
+    if (!url) return "";
 
-  const handleImagesChange = (e) => {
-    setImagesFiles((prev) => [...prev, ...Array.from(e.target.files)]);
-  };
+    const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+    const youtubeMatch = url.match(youtubeRegex);
 
-  const handleVideoChange = (e) => {
-    setVideoFile(e.target.files[0]);
-  };
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+    }
 
-  const uploadToCloudinary = async (file, folder, resourceType = "image") => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "galilee_upload");
-    formData.append("folder", `galilee_uploads/${folder}`);
-
-    const endpoint =
-      resourceType === "video"
-        ? "https://api.cloudinary.com/v1_1/dbxclj6yt/video/upload"
-        : "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload";
-
-    const res = await fetch(endpoint, {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await res.json();
-    return data.secure_url;
+    return url;
   };
 
   const saveChanges = async () => {
@@ -88,47 +71,34 @@ export default function ManageProducts() {
           : null;
       }
 
-      // Upload new card image if selected
-      if (imageCardFile) {
-        updatePayload.imageCard = await uploadToCloudinary(
-          imageCardFile,
-          "card"
-        );
+      // Update card image URL if provided
+      if (imageCardUrl.trim()) {
+        updatePayload.imageUrl = imageCardUrl.trim();
+        updatePayload.imageCard = imageCardUrl.trim();
       }
 
-      // Upload new gallery images if selected
-      if (imagesFiles.length > 0) {
-        const newImagesUrls = [];
-        for (const image of imagesFiles) {
-          const url = await uploadToCloudinary(image, "gallery");
-          newImagesUrls.push(url);
-        }
-        // Append to existing images or replace
+      // Add gallery image URL if provided
+      if (galleryImageUrl.trim()) {
         updatePayload.images = [
           ...(updatedData.images || []),
-          ...newImagesUrls,
+          galleryImageUrl.trim(),
         ];
       }
 
-      // Upload new video if selected
-      if (videoFile) {
-        updatePayload.videoUrl = await uploadToCloudinary(
-          videoFile,
-          "videos",
-          "video"
-        );
+      // Convert video URL if changed
+      if (updatedData.videoUrl !== undefined) {
+        updatePayload.videoUrl = convertToEmbedUrl(updatedData.videoUrl);
       }
 
       await updateDoc(productRef, updatePayload);
 
       toast.success("Product updated successfully");
       setEditingId(null);
-      setImageCardFile(null);
-      setImagesFiles([]);
-      setVideoFile(null);
+      setImageCardUrl("");
+      setGalleryImageUrl("");
     } catch (err) {
       toast.error("Error updating product");
-      console.log("err");
+      console.log(err);
     } finally {
       setLoadingImg(false);
     }
@@ -258,19 +228,27 @@ export default function ManageProducts() {
                     </p>
                   </div>
 
-                  {/* Card Image Upload */}
+                  {/* Card Image URL */}
                   <div className="flex flex-col">
                     <label className="font-medium text-darkBlue mb-2 text-sm">
-                      Card Image (Main)
+                      Card Image URL (Main)
                     </label>
+                    <div className="mb-2">
+                      <p className="text-xs text-gray-500 mb-2">
+                        Current Image:
+                      </p>
+                      <img
+                        src={p.imageCard || p.imageUrl}
+                        alt="Current"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                    </div>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageCardChange}
-                      className="border-0 outline-none focus:outline-none focus:ring-0 
-                      file:mr-3 file:py-2 file:px-4 file:rounded-md 
-                      file:border-0 file:text-white file:bg-orange 
-                      hover:file:bg-blue file:cursor-pointer cursor-pointer"
+                      type="text"
+                      value={imageCardUrl}
+                      onChange={(e) => setImageCardUrl(e.target.value)}
+                      placeholder="Paste any image URL"
+                      className="p-3 border rounded-xl"
                     />
                   </div>
 
@@ -303,35 +281,45 @@ export default function ManageProducts() {
                     )}
 
                     <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImagesChange}
-                      className="border-0 outline-none focus:outline-none focus:ring-0 
-                      file:mr-3 file:py-2 file:px-4 file:rounded-md 
-                      file:border-0 file:text-white file:bg-orange 
-                      hover:file:bg-blue file:cursor-pointer cursor-pointer"
+                      type="text"
+                      value={galleryImageUrl}
+                      onChange={(e) => setGalleryImageUrl(e.target.value)}
+                      placeholder="Paste image URL to add to gallery"
+                      className="p-3 border rounded-xl"
                     />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Add one image at a time. Click Save to add the image to
+                      gallery.
+                    </p>
                   </div>
 
                   {/* Video Upload */}
                   <div className="flex flex-col">
                     <label className="font-medium text-darkBlue mb-2 text-sm">
-                      Product Video (optional)
+                      Video URL (optional)
                     </label>
+
+                    {/* عرض الفيديو الحالي */}
                     {p.videoUrl && (
-                      <p className="text-xs text-gray-500 mb-2">
-                        Current video exists
-                      </p>
+                      <div className="mb-3">
+                        <p className="text-xs text-gray-500 mb-2">
+                          Current Video:
+                        </p>
+                        <iframe
+                          src={p.videoUrl}
+                          className="w-full h-48 rounded-xl"
+                          allowFullScreen
+                        />
+                      </div>
                     )}
+
                     <input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleVideoChange}
-                      className="border-0 outline-none focus:outline-none focus:ring-0 
-                      file:mr-3 file:py-2 file:px-4 file:rounded-md 
-                      file:border-0 file:text-white file:bg-orange 
-                      hover:file:bg-blue file:cursor-pointer cursor-pointer"
+                      type="text"
+                      name="videoUrl"
+                      defaultValue={p.videoUrl}
+                      onChange={handleChange}
+                      placeholder="https://www.youtube.com/watch?v=ABC123 or embed link"
+                      className="p-3 border rounded-xl"
                     />
                   </div>
 
@@ -340,15 +328,14 @@ export default function ManageProducts() {
                     disabled={loadingImg}
                     className="bg-orange text-white px-5 py-2 rounded-xl mt-4 disabled:opacity-50"
                   >
-                    {loadingImg ? "Uploading..." : "Save"}
+                    {loadingImg ? "Saving..." : "Save"}
                   </button>
 
                   <button
                     onClick={() => {
                       setEditingId(null);
-                      setImageCardFile(null);
-                      setImagesFiles([]);
-                      setVideoFile(null);
+                      setImageCardUrl("");
+                      setGalleryImageUrl("");
                     }}
                     className="bg-gray-300 px-5 py-2 rounded-xl mt-2"
                   >
@@ -413,6 +400,8 @@ export default function ManageProducts() {
                       onClick={() => {
                         setEditingId(p.id);
                         setUpdatedData(p);
+                        setImageCardUrl("");
+                        setGalleryImageUrl("");
                       }}
                       className="bg-blue text-white px-4 py-2 rounded-xl"
                     >

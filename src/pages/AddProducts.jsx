@@ -17,9 +17,11 @@ export default function AddProducts() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [imagesFiles, setImagesFiles] = useState([]);
-  const [videoFile, setVideoFile] = useState(null);
-  const [mainImageFile, setMainImageFile] = useState(null);
+
+  // New Image Url
+  const [externalMainImageUrl, setExternalMainImageUrl] = useState("");
+  const [externalGalleryUrls, setExternalGalleryUrls] = useState("");
+  const [externalVideoUrl, setExternalVideoUrl] = useState("");
 
   const handleChange = (e) => {
     setProductData({
@@ -28,89 +30,51 @@ export default function AddProducts() {
     });
   };
 
-  const handleImagesChange = (e) => {
-    setImagesFiles((prev) => [...prev, ...Array.from(e.target.files)]);
-  };
-
-  const handleVideoChange = (e) => {
-    setVideoFile(e.target.files[0]);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!mainImageFile) {
-      return toast.error("Please select main image");
+    if (!externalMainImageUrl) {
+      return toast.error("Please enter main image URL");
     }
 
     setLoading(true);
 
     try {
-      /* ===== Upload Main Image ===== */
-      const mainImageData = new FormData();
-      mainImageData.append("file", mainImageFile);
-      mainImageData.append("upload_preset", "galilee_upload");
-      mainImageData.append("folder", "galilee_uploads/main");
-
-      const mainImageRes = await fetch(
-        "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
-        {
-          method: "POST",
-          body: mainImageData,
-        }
-      );
-
-      const mainImage = await mainImageRes.json();
-
-      /* ===== Upload Product Images ===== */
-      const imagesUrls = [];
-
-      for (const image of imagesFiles) {
-        const formData = new FormData();
-        formData.append("file", image);
-        formData.append("upload_preset", "galilee_upload");
-        formData.append("folder", "galilee_uploads/gallery");
-
-        const res = await fetch(
-          "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
-          { method: "POST", body: formData }
-        );
-
-        const data = await res.json();
-        imagesUrls.push(data.secure_url);
-      }
-
-      /* ===== Upload Video (Optional) ===== */
-      let videoUrl = "";
-
-      if (videoFile) {
-        const videoData = new FormData();
-        videoData.append("file", videoFile);
-        videoData.append("upload_preset", "galilee_upload");
-        videoData.append("folder", "galilee_uploads/videos");
-
-        const res = await fetch(
-          "https://api.cloudinary.com/v1_1/dbxclj6yt/video/upload",
-          { method: "POST", body: videoData }
-        );
-
-        const data = await res.json();
-        videoUrl = data.secure_url;
-      }
+      /* ===== معالجة الـ External URLs ===== */
+      const externalGalleryArray = externalGalleryUrls
+        .split(/\r?\n|,/)
+        .map((url) => url.trim())
+        .filter((url) => url && url.startsWith("http"));
 
       /* ===== Save To Firebase ===== */
+      // Products دا الاساسي
+      // ProductsTest دا للتجربة
       await setDoc(doc(collection(db, "Products")), {
         ...productData,
-        imageUrl: mainImage.secure_url,
-        images: imagesUrls,
-        videoUrl,
+        imageUrl: externalMainImageUrl,
+        images: externalGalleryArray,
+        videoUrl: externalVideoUrl || "",
         order: productData.order ? parseInt(productData.order) : null,
         createdAt: serverTimestamp(),
       });
 
       toast.success("Product added successfully");
+
+      // Reset form
+      setProductData({
+        name: "",
+        description: "",
+        descriptionDetails: "",
+        price: "",
+        discountPrice: "",
+        category: "",
+        order: "",
+      });
+      setExternalMainImageUrl("");
+      setExternalGalleryUrls("");
+      setExternalVideoUrl("");
     } catch (error) {
-      toast.error("Error adding product");
+      toast.error("Error adding product", error);
     } finally {
       setLoading(false);
     }
@@ -133,6 +97,8 @@ export default function AddProducts() {
           <label className="text-darkBlue font-medium mb-2">Product Name</label>
           <input
             type="text"
+            data-gramm="false"
+            data-gramm_editor="false"
             name="name"
             placeholder="Enter product name"
             onChange={handleChange}
@@ -146,6 +112,8 @@ export default function AddProducts() {
           <label className="text-darkBlue font-medium mb-2">Description</label>
           <textarea
             name="description"
+            data-gramm="false"
+            data-gramm_editor="false"
             rows="4"
             placeholder="Enter product description"
             onChange={handleChange}
@@ -161,6 +129,8 @@ export default function AddProducts() {
           </label>
           <textarea
             name="descriptionDetails"
+            data-gramm="false"
+            data-gramm_editor="false"
             rows="6"
             placeholder="Enter detailed product information (materials, size, usage...)"
             onChange={handleChange}
@@ -230,49 +200,47 @@ export default function AddProducts() {
             at the end.
           </p>
         </div>
-        {/* Card Image Upload */}
-        <div className="flex flex-col">
-          <label className="text-darkBlue font-medium mb-2">Main Image</label>
 
+        {/* External Main Image URL */}
+        <div className="flex flex-col mb-4">
+          <label className="text-darkBlue font-medium mb-2">
+            Main Image URL
+          </label>
           <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setMainImageFile(e.target.files[0])}
-            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
-      file:mr-3 file:py-2 file:px-4 file:rounded-md 
-      file:border-0 file:text-white file:bg-orange 
-      file:hover:bg-blue file:cursor-pointer cursor-pointer"
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            value={externalMainImageUrl}
+            onChange={(e) => setExternalMainImageUrl(e.target.value)}
+            className="p-4 rounded-xl border border-gray-300
+             bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-orange focus:outline-none"
           />
         </div>
 
-        <div className="flex flex-col">
-          <label className="font-medium text-darkBlue mb-2">
-            Product Images (Gallery)
-          </label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImagesChange}
-            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
-            file:mr-3 file:py-2 file:px-4 file:rounded-md 
-            file:border-0 file:text-white file:bg-orange 
-            file:hover:bg-blue file:cursor-pointer cursor-pointer"
+        {/* External Gallery URLs */}
+        <div className="flex flex-col mb-4">
+          <label className="font-medium text-darkBlue mb-2">Gallery URLs</label>
+          <textarea
+            rows="4"
+            data-gramm="false"
+            data-gramm_editor="false"
+            placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;Or separate by commas"
+            value={externalGalleryUrls}
+            onChange={(e) => setExternalGalleryUrls(e.target.value)}
+            className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-orange focus:outline-none"
           />
         </div>
 
+        {/* External Video URL */}
         <div className="flex flex-col">
           <label className="font-medium text-darkBlue mb-2">
-            Product Video (optional)
+            Video URL (optional)
           </label>
           <input
-            type="file"
-            accept="video/*"
-            onChange={handleVideoChange}
-            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
-            file:mr-3 file:py-2 file:px-4 file:rounded-md 
-            file:border-0 file:text-white file:bg-orange 
-            file:hover:bg-blue file:cursor-pointer cursor-pointer"
+            type="url"
+            placeholder="https://example.com/video.mp4"
+            value={externalVideoUrl}
+            onChange={(e) => setExternalVideoUrl(e.target.value)}
+            className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-orange focus:outline-none"
           />
         </div>
 
