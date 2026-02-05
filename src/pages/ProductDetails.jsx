@@ -73,7 +73,7 @@ export default function ProductDetails() {
         console.error("Error fetching product");
         toast.error("Error loading product");
         setLoading(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -129,6 +129,19 @@ export default function ProductDetails() {
     return () => unsubscribe();
   }, [user]);
 
+  const convertToEmbedUrl = (url) => {
+    if (!url) return "";
+
+    const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+    const youtubeMatch = url.match(youtubeRegex);
+
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+    }
+
+    return url;
+  };
+
   // Toggle favorite
   const toggleFavorite = () => {
     if (!product) return;
@@ -138,7 +151,7 @@ export default function ProductDetails() {
       [product.id]: !favorites[product.id],
     };
     const favIds = Object.keys(updatedFavorites).filter(
-      (key) => updatedFavorites[key]
+      (key) => updatedFavorites[key],
     );
 
     localStorage.setItem("favorites", JSON.stringify(favIds));
@@ -236,11 +249,11 @@ export default function ProductDetails() {
               {/* Main Display */}
               <div className="relative bg-white rounded-3xl overflow-hidden shadow-lg">
                 {showVideo && product.videoUrl ? (
-                  <video
-                    src={product.videoUrl}
-                    controls
-                    autoPlay
+                  <iframe
+                    src={convertToEmbedUrl(product.videoUrl)}
                     className="w-full h-[500px] object-cover"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
                   />
                 ) : (
                   <img
