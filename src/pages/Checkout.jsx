@@ -27,7 +27,7 @@ const checkoutSchema = z
       .string()
       .regex(
         /^01[0125][0-9]{8}$/,
-        "Please enter a valid Egyptian WhatsApp number"
+        "Please enter a valid Egyptian WhatsApp number",
       ),
     city: z.string().min(1, "Please select a city"),
     area: z
@@ -51,7 +51,7 @@ const checkoutSchema = z
         (val) => {
           return true;
         },
-        { message: "" }
+        { message: "" },
       ),
   })
   .refine(
@@ -79,88 +79,88 @@ const checkoutSchema = z
     {
       message: "Reference number is required",
       path: ["referenceNumber"],
-    }
+    },
   );
 
 //    Egypt Cities
 const egyptCities = [
-  "Cairo",
-  "Giza",
-  "Fayoum",
-  "Beni Suef",
-  "Minya",
-  "Assiut",
-  "Sohag",
-  "Qena",
-  "Nag Hammadi",
-  "Luxor",
-  "Aswan",
-  "Alexandria",
-  "Tanta",
-  "Mahalla",
-  "Mansoura",
-  "Suez",
-  "Beheira",
-  "Sharqia",
-  "10th of Ramadan",
-  "Port Said",
-  "Ismailia",
-  "Damietta",
-  "Kafr El Sheikh",
-  "Qalyubia",
-  "Al Gharbia",
-  "Monufia",
-  "Dakahlia",
-  "North Coast",
-  "Marsa Matrouh",
-  "Hurghada",
-  "Sharm El Sheikh",
-  "Marsa Alam",
-  "Banha",
-  "Badrashin",
-  "Hawamdeya",
-  "Saqqara",
-  "Badr City",
+  { id: "cairo", label: "Cairo" },
+  { id: "giza", label: "Giza" },
+  { id: "fayoum", label: "Fayoum" },
+  { id: "beni-suef", label: "Beni Suef" },
+  { id: "minya", label: "Minya" },
+  { id: "assiut", label: "Assiut" },
+  { id: "sohag", label: "Sohag" },
+  { id: "qena", label: "Qena" },
+  { id: "nag-hammadi", label: "Nag Hammadi" },
+  { id: "luxor", label: "Luxor" },
+  { id: "aswan", label: "Aswan" },
+  { id: "alexandria", label: "Alexandria" },
+  { id: "tanta", label: "Tanta" },
+  { id: "mahalla", label: "Mahalla" },
+  { id: "mansoura", label: "Mansoura" },
+  { id: "suez", label: "Suez" },
+  { id: "beheira", label: "Beheira" },
+  { id: "sharqia", label: "Sharqia" },
+  { id: "10th-of-ramadan", label: "10th of Ramadan" },
+  { id: "port-said", label: "Port Said" },
+  { id: "ismailia", label: "Ismailia" },
+  { id: "damietta", label: "Damietta" },
+  { id: "kafr-elsheikh", label: "Kafr El Sheikh" },
+  { id: "qalyubia", label: "Qalyubia" },
+  { id: "al-gharbia", label: "Al Gharbia" },
+  { id: "monufia", label: "Monufia" },
+  { id: "dakahlia", label: "Dakahlia" },
+  { id: "north-coast", label: "North Coast" },
+  { id: "marsa-matrouh", label: "Marsa Matrouh" },
+  { id: "hurghada", label: "Hurghada" },
+  { id: "sharm-el-sheikh", label: "Sharm El Sheikh" },
+  { id: "marsa-alam", label: "Marsa Alam" },
+  { id: "banha", label: "Banha" },
+  { id: "badrashin", label: "Badrashin" },
+  { id: "hawamdeya", label: "Hawamdeya" },
+  { id: "saqqara", label: "Saqqara" },
+  { id: "badr-city", label: "Badr City" },
 ];
 
 const shippingFees = {
-  Cairo: 60,
-  Giza: 60,
-  Fayoum: 100,
-  "Beni Suef": 100,
-  Minya: 100,
-  Assiut: 100,
-  Sohag: 100,
-  Qena: 100,
-  "Nag Hammadi": 100,
-  Luxor: 105,
-  Aswan: 115,
-  Alexandria: 85,
-  Tanta: 90,
-  Mahalla: 90,
-  Mansoura: 90,
-  Suez: 90,
-  Beheira: 90,
-  Sharqia: 90,
-  "10th of Ramadan": 90,
-  "Port Said": 90,
-  Ismailia: 90,
-  Damietta: 90,
-  "Kafr El Sheikh": 90,
-  Qalyubia: 90,
-  "Al Gharbia": 90,
-  Monufia: 90,
-  Dakahlia: 90,
-  "North Coast": 125,
-  "Marsa Matrouh": 125,
-  Hurghada: 135,
-  "Sharm El Sheikh": 135,
-  "Marsa Alam": 135,
-  Banha: 85,
-  Badrashin: 85,
-  Hawamdeya: 85,
-  Saqqara: 85,
-  "Badr City": 85,
+  cairo: 60,
+  giza: 60,
+  fayoum: 100,
+  "beni-suef": 100,
+  minya: 100,
+  assiut: 100,
+  sohag: 100,
+  qena: 100,
+  "nag-hammadi": 100,
+  luxor: 105,
+  aswan: 115,
+  alexandria: 85,
+  tanta: 90,
+  mahalla: 90,
+  mansoura: 90,
+  suez: 90,
+  beheira: 90,
+  sharqia: 90,
+  "10th-of-ramadan": 90,
+  "port-said": 90,
+  ismailia: 90,
+  damietta: 90,
+  "kafr-elsheikh": 90,
+  qalyubia: 90,
+  "al-gharbia": 90,
+  monufia: 90,
+  dakahlia: 90,
+  "north-coast": 125,
+  "marsa-matrouh": 125,
+  hurghada: 135,
+  "sharm-el-sheikh": 135,
+  "marsa-alam": 135,
+  banha: 85,
+  badrashin: 85,
+  hawamdeya: 85,
+  saqqara: 85,
+  "badr-city": 85,
 };
 
 //  Get Cart Data with Products Details
@@ -192,7 +192,7 @@ const getCartTotal = () => {
     .filter((p) => cart.includes(p.id))
     .reduce(
       (acc, item) => acc + Number(item.price || 0) * (quantities[item.id] || 1),
-      0
+      0,
     );
 };
 
@@ -254,7 +254,7 @@ export default function Checkout() {
         {
           method: "POST",
           body: formData,
-        }
+        },
       );
 
       if (!res.ok) {
@@ -313,7 +313,7 @@ export default function Checkout() {
       localStorage.removeItem("cartProducts");
 
       toast.success(
-        "Order placed successfully Thank you for shopping with us."
+        "Order placed successfully Thank you for shopping with us.",
       );
 
       setTimeout(() => {
@@ -426,7 +426,9 @@ export default function Checkout() {
                 >
                   <option value="">Select city</option>
                   {egyptCities.map((city) => (
-                    <option key={city}>{city}</option>
+                    <option key={city.id} value={city.id}>
+                      {city.label}
+                    </option>
                   ))}
                 </select>
                 {errors.city && (
