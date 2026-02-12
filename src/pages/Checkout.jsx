@@ -53,6 +53,7 @@ const checkoutSchema = z
         },
         { message: "" },
       ),
+    vodafoneScreenshot: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -79,6 +80,25 @@ const checkoutSchema = z
     {
       message: "Reference number is required",
       path: ["referenceNumber"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.paymentMethod !== "vodafone") {
+        return true;
+      }
+
+      const screenshot = data.vodafoneScreenshot?.trim() || "";
+
+      if (screenshot === "") {
+        return false;
+      }
+
+      return true;
+    },
+    {
+      message: "Please upload transfer screenshot",
+      path: ["vodafoneScreenshot"],
     },
   );
 
@@ -722,7 +742,7 @@ export default function Checkout() {
                   </div>
 
                   {errors.vodafoneScreenshot && (
-                    <p className="text-red-500 text-sm mt-2">
+                    <p className="text-red-500 text-sm mt-2 ml-1">
                       {errors.vodafoneScreenshot.message}
                     </p>
                   )}
