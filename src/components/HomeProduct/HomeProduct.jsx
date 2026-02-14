@@ -36,6 +36,7 @@ export default function HomeProduct() {
           realPrice: d.price,
           category: d.category,
           details: d.description,
+          outOfStock: d.outOfStock || false,
         };
       });
       setProducts(data);
@@ -67,7 +68,7 @@ export default function HomeProduct() {
         new Set([
           ...localFav,
           ...firebaseFav.filter((id) => localFav.includes(id)),
-        ])
+        ]),
       );
 
       localStorage.setItem("favorites", JSON.stringify(mergedFav));
@@ -94,7 +95,7 @@ export default function HomeProduct() {
         new Set([
           ...localCart,
           ...firebaseCart.filter((id) => localCart.includes(id)),
-        ])
+        ]),
       );
 
       localStorage.setItem("cart", JSON.stringify(mergedCart));
@@ -128,9 +129,15 @@ export default function HomeProduct() {
     setFavorites(updated);
   };
 
-  const toggleCart = (e, id, name) => {
+  const toggleCart = (e, id, name, isOutOfStock) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isOutOfStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
     const updated = { ...cart, [id]: !cart[id] };
     const cartIds = Object.keys(updated).filter((k) => updated[k]);
 
@@ -214,32 +221,46 @@ export default function HomeProduct() {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 ${
+                        product.outOfStock ? "opacity-60 grayscale" : ""
+                      }`}
                     />
-                    <div
-                      className="
+
+                    {/* Out of Stock Badge */}
+                    {product.outOfStock && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                        <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
+                          OUT OF STOCK
+                        </div>
+                      </div>
+                    )}
+
+                    {!product.outOfStock && (
+                      <div
+                        className="
     absolute inset-0
     opacity-0 group-hover:opacity-100
     flex items-center justify-center
     transition-opacity duration-300    z-0
   "
-                    >
-                      <span
-                        className="
+                      >
+                        <span
+                          className="
       bg-white text-darkBlue
       px-6 py-3 rounded-full
        shadow text-sm
     "
-                      >
-                        View Details
-                      </span>
-                    </div>
+                        >
+                          View Details
+                        </span>
+                      </div>
+                    )}
 
                     <button
                       onClick={(e) =>
                         toggleFavorite(e, product.id, product.name)
                       }
-                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
+                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition z-50"
                     >
                       {favorites[product.id] ? (
                         <AiFillHeart className="h-6 w-6 text-orange" />
@@ -265,7 +286,9 @@ export default function HomeProduct() {
 
                     <div className="flex items-center justify-between mt-6">
                       <div className="text-lg font-bold text-orange">
-                        {product.realPrice !== product.price ? (
+                        {product.outOfStock ? (
+                          <span className="text-red-600">Not Available</span>
+                        ) : product.realPrice !== product.price ? (
                           <>
                             <span className="line-through text-gray-400 mr-2">
                               {product.realPrice} EGP
@@ -278,14 +301,26 @@ export default function HomeProduct() {
                       </div>
 
                       <button
-                        onClick={(e) => toggleCart(e, product.id, product.name)}
+                        onClick={(e) =>
+                          toggleCart(
+                            e,
+                            product.id,
+                            product.name,
+                            product.outOfStock,
+                          )
+                        }
+                        disabled={product.outOfStock}
                         className={`flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow ${
-                          cart[product.id]
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+                          product.outOfStock
+                            ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                            : cart[product.id]
+                              ? "bg-red-600 hover:bg-red-700 text-white"
+                              : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
                         }`}
                       >
-                        {cart[product.id] ? (
+                        {product.outOfStock ? (
+                          "Out of Stock"
+                        ) : cart[product.id] ? (
                           <>
                             Remove <FaShoppingCart size={20} color="white" />
                           </>
