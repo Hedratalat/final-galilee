@@ -39,6 +39,7 @@ export default function Favorites() {
         realPrice: doc.data().price,
         category: doc.data().category,
         details: doc.data().description,
+        outOfStock: doc.data().outOfStock || false,
       }));
       setProducts(data);
     });
@@ -109,28 +110,29 @@ export default function Favorites() {
     });
   };
   // toggle cart
-  const toggleCart = (id, name) => {
+  const toggleCart = (id, name, isOutOfStock) => {
+    if (isOutOfStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
     const updatedCart = { ...cart, [id]: !cart[id] };
     const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
 
-    // تحديث localStorage
     localStorage.setItem("cart", JSON.stringify(cartIds));
     window.dispatchEvent(new Event("cartUpdated"));
 
-    // تحديث Firebase لو المستخدم مسجل دخول
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
       updateDoc(userCartRef, { cart: cartIds }).catch(() => {});
     }
 
-    // toast
     if (updatedCart[id]) toast.success(`Added ${name} to cart`);
     else
       toast(`Removed ${name} from cart`, {
         icon: <AiOutlineClose color="red" size={20} />,
       });
 
-    // تحديث state
     setCart(updatedCart);
   };
 
@@ -214,13 +216,24 @@ export default function Favorites() {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-500"
+                      className={`w-full h-64 object-cover transform group-hover:scale-105 transition-transform duration-500 ${
+                        product.outOfStock ? "opacity-60 grayscale" : ""
+                      }`}
                     />
+
+                    {/* Out of Stock Badge */}
+                    {product.outOfStock && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                        <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
+                          OUT OF STOCK
+                        </div>
+                      </div>
+                    )}
 
                     {/* Remove Favorite Button */}
                     <button
                       onClick={() => removeFavorite(product.id)}
-                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition"
+                      className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition z-50"
                     >
                       <AiFillHeart className="h-7 w-7 text-orange" />
                     </button>
@@ -240,7 +253,9 @@ export default function Favorites() {
 
                     <div className="flex items-center justify-between mt-6">
                       <div className="text-lg font-bold text-orange">
-                        {product.realPrice !== product.price ? (
+                        {product.outOfStock ? (
+                          <span className="text-red-600">Not Available</span>
+                        ) : product.realPrice !== product.price ? (
                           <>
                             <span className="line-through text-gray-400 mr-2">
                               {product.realPrice} EGP
@@ -252,17 +267,28 @@ export default function Favorites() {
                         )}
                       </div>
                       <button
-                        onClick={() => toggleCart(product.id, product.name)}
+                        onClick={() =>
+                          toggleCart(
+                            product.id,
+                            product.name,
+                            product.outOfStock,
+                          )
+                        }
+                        disabled={product.outOfStock}
                         className={`
     flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
     ${
-      cart[product.id]
-        ? "bg-red-600 hover:bg-red-700 text-white"
-        : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+      product.outOfStock
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : cart[product.id]
+          ? "bg-red-600 hover:bg-red-700 text-white"
+          : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
     }
   `}
                       >
-                        {cart[product.id] ? (
+                        {product.outOfStock ? (
+                          "Out of Stock"
+                        ) : cart[product.id] ? (
                           <>
                             Remove <FaShoppingCart size={20} color="white" />
                           </>

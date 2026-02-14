@@ -49,6 +49,7 @@ export default function Products() {
           category: d.category,
           details: d.description,
           order: d.order || null,
+          outOfStock: d.outOfStock || false,
         };
       });
       setProducts(data);
@@ -88,7 +89,7 @@ export default function Products() {
         new Set([
           ...localFav,
           ...firebaseFav.filter((id) => localFav.includes(id)),
-        ])
+        ]),
       );
 
       // تحديث localStorage لو فيه فرق
@@ -123,7 +124,7 @@ export default function Products() {
         new Set([
           ...localCart,
           ...firebaseCart.filter((id) => localCart.includes(id)),
-        ])
+        ]),
       );
 
       // تحديث localStorage لو فيه فرق
@@ -147,7 +148,7 @@ export default function Products() {
     e.stopPropagation();
     const updatedFavorites = { ...favorites, [id]: !favorites[id] };
     const favIds = Object.keys(updatedFavorites).filter(
-      (key) => updatedFavorites[key]
+      (key) => updatedFavorites[key],
     );
 
     // حفظ localStorage
@@ -172,24 +173,26 @@ export default function Products() {
   };
 
   // toggle cart
-  const toggleCart = (e, id, name) => {
+  const toggleCart = (e, id, name, isOutOfStock) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isOutOfStock) {
+      toast.error("This product is out of stock");
+      return;
+    }
 
     const updatedCart = { ...cart, [id]: !cart[id] };
     const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
 
-    // LocalStorage
     localStorage.setItem("cart", JSON.stringify(cartIds));
     window.dispatchEvent(new Event("cartUpdated"));
 
-    // Firebase
     if (user) {
       const userCartRef = doc(db, "Users", user.uid);
       updateDoc(userCartRef, { cart: cartIds }).catch(() => {});
     }
 
-    // Toast
     if (updatedCart[id]) toast.success(`Added ${name} to cart`);
     else
       toast(`Removed ${name} from cart`, {
@@ -357,8 +360,20 @@ export default function Products() {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 "
+                        className={`w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 ${
+                          product.outOfStock ? "opacity-60 grayscale" : ""
+                        }`}
                       />
+
+                      {/* Out of Stock Badge */}
+                      {product.outOfStock && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                          <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
+                            OUT OF STOCK
+                          </div>
+                        </div>
+                      )}
+
                       <div
                         className="
     absolute inset-0
@@ -408,7 +423,9 @@ export default function Products() {
 
                       <div className="flex items-center justify-between mt-6">
                         <div className="text-lg font-bold text-orange">
-                          {product.realPrice !== product.price ? (
+                          {product.outOfStock ? (
+                            <span className="text-red-600">Not Available</span>
+                          ) : product.realPrice !== product.price ? (
                             <>
                               <span className="line-through text-gray-400 mr-2">
                                 {product.realPrice} EGP
@@ -421,18 +438,28 @@ export default function Products() {
                         </div>
                         <button
                           onClick={(e) =>
-                            toggleCart(e, product.id, product.name)
+                            toggleCart(
+                              e,
+                              product.id,
+                              product.name,
+                              product.outOfStock,
+                            )
                           }
+                          disabled={product.outOfStock}
                           className={`
-                            flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
-                            ${
-                              cart[product.id]
-                                ? "bg-red-600 hover:bg-red-700 text-white"
-                                : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
-                            }
-                          `}
+    flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
+    ${
+      product.outOfStock
+        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+        : cart[product.id]
+          ? "bg-red-600 hover:bg-red-700 text-white"
+          : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+    }
+  `}
                         >
-                          {cart[product.id] ? (
+                          {product.outOfStock ? (
+                            "Out of Stock"
+                          ) : cart[product.id] ? (
                             <>
                               Remove <FaShoppingCart size={20} color="white" />
                             </>

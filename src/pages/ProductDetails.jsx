@@ -177,6 +177,11 @@ export default function ProductDetails() {
   const toggleCart = () => {
     if (!product) return;
 
+    if (product.outOfStock) {
+      toast.error("This product is out of stock and cannot be added to cart");
+      return;
+    }
+
     const updatedCart = { ...cart, [product.id]: !cart[product.id] };
     const cartIds = Object.keys(updatedCart).filter((key) => updatedCart[key]);
 
@@ -259,10 +264,19 @@ export default function ProductDetails() {
                   <img
                     src={allImages[selectedImage] || mainImage}
                     alt={product.name}
-                    className="w-full h-[500px] object-cover"
+                    className={`w-full h-[500px] object-cover ${
+                      product.outOfStock ? "opacity-60 grayscale" : ""
+                    }`}
                   />
                 )}
-
+                {/* Out of Stock Overlay */}
+                {product.outOfStock && !showVideo && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-red-600 text-white px-8 py-4 rounded-full font-bold text-2xl shadow-xl transform rotate-[-15deg]">
+                      OUT OF STOCK
+                    </div>
+                  </div>
+                )}
                 {/* Video Play Button */}
                 {product.videoUrl && !showVideo && (
                   <button
@@ -358,14 +372,22 @@ export default function ProductDetails() {
 
               {/* Price */}
               <div className="flex items-baseline gap-3">
-                {hasDiscount && (
-                  <span className="text-2xl text-gray-400 line-through">
-                    {product.price} EGP
+                {product.outOfStock ? (
+                  <span className="text-3xl font-bold text-red-600">
+                    Not Available
                   </span>
+                ) : (
+                  <>
+                    {hasDiscount && (
+                      <span className="text-2xl text-gray-400 line-through">
+                        {product.price} EGP
+                      </span>
+                    )}
+                    <span className="text-4xl font-bold text-orange">
+                      {displayPrice} EGP
+                    </span>
+                  </>
                 )}
-                <span className="text-4xl font-bold text-orange">
-                  {displayPrice} EGP
-                </span>
               </div>
 
               {/* Description */}
@@ -396,14 +418,21 @@ export default function ProductDetails() {
               <div className="flex gap-4 pt-4">
                 <button
                   onClick={toggleCart}
+                  disabled={product.outOfStock}
                   className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-xl font-semibold text-lg transition shadow-lg ${
-                    cart[product.id]
-                      ? "bg-red-600 hover:bg-red-700 text-white"
-                      : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+                    product.outOfStock
+                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      : cart[product.id]
+                        ? "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
                   }`}
                 >
                   <FaShoppingCart size={24} />
-                  {cart[product.id] ? "Remove from Cart" : "Add to Cart"}
+                  {product.outOfStock
+                    ? "Out of Stock"
+                    : cart[product.id]
+                      ? "Remove from Cart"
+                      : "Add to Cart"}
                 </button>
 
                 <button

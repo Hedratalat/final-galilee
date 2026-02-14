@@ -58,6 +58,25 @@ export default function ManageProducts() {
     return url;
   };
 
+  // Toggle Out of Stock Status
+  const toggleOutOfStock = async (productId, currentStatus) => {
+    try {
+      const productRef = doc(db, "Products", productId);
+      await updateDoc(productRef, {
+        outOfStock: !currentStatus,
+      });
+
+      toast.success(
+        !currentStatus
+          ? "Product marked as out of stock"
+          : "Product is now available",
+      );
+    } catch (err) {
+      toast.error("Error updating stock status");
+      console.log(err);
+    }
+  };
+
   const saveChanges = async () => {
     try {
       setLoadingImg(true);
@@ -141,12 +160,24 @@ export default function ManageProducts() {
         >
           {products.map((p) => (
             <div key={p.id} className="bg-white rounded-3xl p-6 shadow-md">
-              <img
-                src={p.imageCard || p.imageUrl}
-                alt={p.name}
-                loading="lazy"
-                className="w-full h-60 object-cover rounded-xl mb-4"
-              />
+              <div className="relative">
+                <img
+                  src={p.imageCard || p.imageUrl}
+                  alt={p.name}
+                  loading="lazy"
+                  className={`w-full h-60 object-cover rounded-xl mb-4 ${
+                    p.outOfStock ? "opacity-50 grayscale" : ""
+                  }`}
+                />
+
+                {p.outOfStock && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl mb-4">
+                    <span className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
+                      OUT OF STOCK
+                    </span>
+                  </div>
+                )}
+              </div>
 
               {editingId === p.id ? (
                 <div className="flex flex-col gap-4">
@@ -393,6 +424,35 @@ export default function ManageProducts() {
                         🎥 Video
                       </span>
                     )}
+                  </div>
+
+                  {/* Out of Stock Toggle */}
+                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-darkBlue">
+                          Stock Status
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {p.outOfStock
+                            ? "Product is out of stock"
+                            : "Product is available"}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => toggleOutOfStock(p.id, p.outOfStock)}
+                        className={`px-4 py-2 rounded-xl font-semibold transition-all shadow-md ${
+                          p.outOfStock
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-red-500 hover:bg-red-600 text-white"
+                        }`}
+                      >
+                        {p.outOfStock
+                          ? "Mark as Available"
+                          : "Mark as Out of Stock"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex gap-4 mt-6">
