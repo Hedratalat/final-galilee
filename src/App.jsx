@@ -41,7 +41,7 @@ const WelcomePopUPDash = lazy(() => import("./pages/WelcomePopUpDash"));
 const ButtonScroll = lazy(
   () => import("./components/ButtonScroll/ButtonScroll"),
 );
-const Streak = lazy(() => import("./pages/streak"));
+const Streak = lazy(() => import("./pages/Streak"));
 const LoginTest = lazy(() => import("./pages/LoginTest"));
 // Spinner component
 const LoadingSpinner = () => (
