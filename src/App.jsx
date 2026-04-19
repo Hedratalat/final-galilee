@@ -22,26 +22,27 @@ const Favorites = lazy(() => import("./pages/Favorites"));
 const Cart = lazy(() => import("./pages/Cart"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
 const OrderSuccess = lazy(() => import("./pages/OrderSuccess"));
-const WelcomePopup = lazy(() =>
-  import("./components/WelcomePopup/WelcomePopup")
+const WelcomePopup = lazy(
+  () => import("./components/WelcomePopup/WelcomePopup"),
 );
 const Contact = lazy(() => import("./pages/Contact"));
 const ProtectedRoute = lazy(() => import("./pages/ProtectedRoute"));
 const Overview = lazy(() => import("./pages/Overview"));
 const AddProducts = lazy(() => import("./pages/AddProducts"));
 const ManageProducts = lazy(() => import("./pages/ManageProducts"));
-const DashBoardLayout = lazy(() =>
-  import("./components/DashboardLayout/DashboardLayout")
+const DashBoardLayout = lazy(
+  () => import("./components/DashboardLayout/DashboardLayout"),
 );
 const FeedbackDash = lazy(() => import("./pages/FeedbackDash"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const MessageDash = lazy(() => import("./pages/MessageDash"));
 const OrdersDash = lazy(() => import("./pages/OrdersDash"));
 const WelcomePopUPDash = lazy(() => import("./pages/WelcomePopUpDash"));
-const ButtonScroll = lazy(() =>
-  import("./components/ButtonScroll/ButtonScroll")
+const ButtonScroll = lazy(
+  () => import("./components/ButtonScroll/ButtonScroll"),
 );
-
+const Streak = lazy(() => import("./pages/streak"));
+const LoginTest = lazy(() => import("./pages/LoginTest"));
 // Spinner component
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-screen">
@@ -58,54 +59,65 @@ function ConditionalWelcomePopup() {
   const excludedPaths = ["/dashboard", "/login", "/signup", "/verify-email"];
 
   const shouldShowPopup = !excludedPaths.some((path) =>
-    location.pathname.startsWith(path)
+    location.pathname.startsWith(path),
   );
 
   return shouldShowPopup ? <WelcomePopup /> : null;
 }
+function AppContent() {
+  return (
+    <>
+      <Suspense fallback={<LoadingSpinner />}>
+        <ConditionalWelcomePopup />
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetails />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/myorders" element={<MyOrders />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/streak" element={<Streak />} />
+          <Route path="/login-test" element={<LoginTest />} />
+          {/* //dashboard */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashBoardLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="addProducts" replace />} />
+            <Route path="addProducts" element={<AddProducts />} />
+            <Route path="productsManagement" element={<ManageProducts />} />
+            <Route path="Feedback" element={<FeedbackDash />} />
+            <Route path="message" element={<MessageDash />} />
+            <Route path="ordersDah" element={<OrdersDash />} />
+
+            <Route path="welcomePopUp" element={<WelcomePopUPDash />} />
+
+            {/* <Route path="userDash" element={<UserDash />} />
+              <Route path="feedback" element={<FeedbackDash />} /> */}
+          </Route>
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
 function App() {
   return (
     <>
       <BrowserRouter>
-        <Suspense fallback={<LoadingSpinner />}>
-          <ConditionalWelcomePopup />
-
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/products/:id" element={<ProductDetails />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/myorders" element={<MyOrders />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            {/* //dashboard */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashBoardLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="addProducts" replace />} />
-              <Route path="addProducts" element={<AddProducts />} />
-              <Route path="productsManagement" element={<ManageProducts />} />
-              <Route path="Feedback" element={<FeedbackDash />} />
-              <Route path="message" element={<MessageDash />} />
-              <Route path="ordersDah" element={<OrdersDash />} />
-              <Route path="welcomePopUp" element={<WelcomePopUPDash />} />
-
-              {/* <Route path="userDash" element={<UserDash />} />
-              <Route path="feedback" element={<FeedbackDash />} /> */}
-            </Route>
-          </Routes>
-        </Suspense>
+        <AppContent />
       </BrowserRouter>
       <ButtonScroll />
       <Toaster position="top-center" reverseOrder={false} />
