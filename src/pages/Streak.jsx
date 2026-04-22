@@ -160,7 +160,7 @@ function ParticleCanvas({ side }) {
 }
 
 /* ───────────────────────────── rain canvas ──────────────────────────────── */
-const RAIN_SYMBOLS = ["✝", "✞", "☩", "✟", "☦", "✡", "★", "✦", "✧", "⋆", "✨"];
+const RAIN_SYMBOLS = ["✝", "✞", "☩", "✟", "☦", "★", "✦", "✧", "⋆", "✨"];
 function mkDrop(W) {
   return {
     sym: RAIN_SYMBOLS[Math.floor(Math.random() * RAIN_SYMBOLS.length)],
