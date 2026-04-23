@@ -21,6 +21,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from "firebase/firestore";
+import TopRanking from "../components/TopRanking/TopRanking";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -331,12 +332,28 @@ export default function Streak() {
     }
     const data = snap.data();
     const today = todayStr();
+    const yesterday = new Date(Date.now() - 86400000)
+      .toISOString()
+      .slice(0, 10);
+
+    // ── Daily Reset: لو آخر صلاة مش امبارح ولا النهارده → ينقص 1 ──
+    if (
+      data.streak > 0 &&
+      data.lastPrayedDate !== today &&
+      data.lastPrayedDate !== yesterday
+    ) {
+      const newStreak = data.streak - 1;
+      await setDoc(
+        doc(db, "users", u.uid),
+        { streak: newStreak },
+        { merge: true },
+      );
+      data.streak = newStreak;
+    }
 
     setStreak(data.streak || 0);
     setTodayDone((data.lastPrayedDate || "") === today);
     setWeekHistory(data.weekHistory || Array(7).fill(false));
-
-    // ── Prayer Log من users/{uid} مباشرةً ──
     setPrayerLog(buildPrayerLog(data.prayers));
   }
 
@@ -458,7 +475,6 @@ export default function Streak() {
 
       <div className="flex min-h-screen relative" style={{ zIndex: 10 }}>
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
-
         <div className="flex-1" style={{ zIndex: 20 }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
             {/* Header */}
@@ -1049,6 +1065,7 @@ export default function Streak() {
         </div>
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
       </div>
+      <TopRanking currentUserId={user?.uid} />
 
       {/* Toast */}
       <div
