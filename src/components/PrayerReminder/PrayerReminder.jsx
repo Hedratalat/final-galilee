@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import OneSignal from "react-onesignal";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 
 function Orb({ cls, w, h, bg, s }) {
@@ -19,30 +19,39 @@ export default function PrayerReminder({ user, todayDone }) {
 
   useEffect(() => {
     async function checkStatus() {
-      const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-      setEnabled(!!isSubscribed);
+      if (!user) return;
+      // اقرأ الحالة من Firestore مش من OneSignal عشان تكون دايمًا صح بعد الـ refresh
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) {
+        setEnabled(!!snap.data().notificationsEnabled);
+      }
     }
     checkStatus();
-  }, []);
+  }, [user]);
 
   async function toggleNotifications() {
     if (!user) return;
     setLoading(true);
     try {
       if (!enabled) {
-        // ✅ تفعيل الإشعارات
         await OneSignal.Notifications.requestPermission();
+
+        // انتظر OneSignal يسجل الـ subscription
+        await new Promise((res) => setTimeout(res, 1000));
+
         const subId = OneSignal.User.PushSubscription.id;
-        if (subId) {
+        const isOptedIn = OneSignal.User.PushSubscription.optedIn;
+
+        if (subId && isOptedIn) {
           await setDoc(
             doc(db, "users", user.uid),
             { oneSignalId: subId, notificationsEnabled: true },
             { merge: true },
           );
+          setEnabled(true);
         }
-        setEnabled(true);
+        // لو المستخدم رفض الإذن من المتصفح مش هيحصل حاجة
       } else {
-        // ❌ إيقاف الإشعارات
         await OneSignal.User.PushSubscription.optOut();
         await setDoc(
           doc(db, "users", user.uid),
