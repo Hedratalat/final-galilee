@@ -7,6 +7,8 @@ import OneSignal from "react-onesignal";
 OneSignal.init({
   appId: "0047e379-3dd6-45a3-be26-776439d0bcc5",
   allowLocalhostAsSecureOrigin: true,
+  serviceWorkerParam: { scope: "/" },
+  serviceWorkerPath: "OneSignalSDKWorker.js",
   notifyButton: {
     enable: false,
   },
