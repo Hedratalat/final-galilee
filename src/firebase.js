@@ -5,6 +5,7 @@ import { getFirestore } from "firebase/firestore";
 
 import { getAuth } from "firebase/auth";
 import { serverTimestamp } from "firebase/firestore";
+import { getMessaging } from "firebase/messaging";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
@@ -25,6 +26,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const messaging = getMessaging(app);
+
 export { serverTimestamp };
 const analytics = getAnalytics(app);
 

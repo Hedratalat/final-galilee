@@ -22,6 +22,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import TopRanking from "../components/TopRanking/TopRanking";
+import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -332,25 +333,26 @@ export default function Streak() {
     }
     const data = snap.data();
     const today = todayStr();
-    const yesterday = new Date(Date.now() - 86400000)
-      .toISOString()
-      .slice(0, 10);
 
-    // ── Daily Reset: لو آخر صلاة مش امبارح ولا النهارده → ينقص 1 ──
-    if (
-      data.streak > 0 &&
-      data.lastPrayedDate !== today &&
-      data.lastPrayedDate !== yesterday
-    ) {
-      const newStreak = data.streak - 1;
-      await setDoc(
-        doc(db, "users", u.uid),
-        { streak: newStreak },
-        { merge: true },
+    // ── حساب كام يوم فات من آخر صلاة ──
+    // ── حساب كام يوم فات من آخر صلاة ──
+    if (data.streak > 0 && data.lastPrayedDate) {
+      const lastDate = new Date(data.lastPrayedDate);
+      const todayDate = new Date(today);
+      const diffDays = Math.floor(
+        (todayDate - lastDate) / (1000 * 60 * 60 * 24),
       );
-      data.streak = newStreak;
-    }
 
+      if (diffDays > 1) {
+        const newStreak = Math.max(0, data.streak - diffDays);
+        await setDoc(
+          doc(db, "users", u.uid),
+          { streak: newStreak },
+          { merge: true },
+        );
+        data.streak = newStreak;
+      }
+    }
     setStreak(data.streak || 0);
     setTodayDone((data.lastPrayedDate || "") === today);
     setWeekHistory(data.weekHistory || Array(7).fill(false));
@@ -808,6 +810,7 @@ export default function Streak() {
                 )}
               </div>
             </div>
+            <PrayerReminder user={user} todayDone={todayDone} />
 
             {/* Milestones */}
             <div
