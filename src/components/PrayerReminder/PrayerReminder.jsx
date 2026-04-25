@@ -17,35 +17,41 @@ export default function PrayerReminder({ user, todayDone }) {
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // شوف لو الـ notification معموله enable قبل كده
   useEffect(() => {
     async function checkStatus() {
       const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-      setEnabled(isSubscribed);
+      setEnabled(!!isSubscribed);
     }
     checkStatus();
   }, []);
 
-  async function enableNotifications() {
+  async function toggleNotifications() {
     if (!user) return;
     setLoading(true);
     try {
-      // اطلب الإذن
-      await OneSignal.Notifications.requestPermission();
-
-      // جيب الـ ID
-      const subId = OneSignal.User.PushSubscription.id;
-
-      // احفظه في Firestore
-      if (subId) {
+      if (!enabled) {
+        // ✅ تفعيل الإشعارات
+        await OneSignal.Notifications.requestPermission();
+        const subId = OneSignal.User.PushSubscription.id;
+        if (subId) {
+          await setDoc(
+            doc(db, "users", user.uid),
+            { oneSignalId: subId, notificationsEnabled: true },
+            { merge: true },
+          );
+        }
+        setEnabled(true);
+      } else {
+        // ❌ إيقاف الإشعارات
+        await OneSignal.User.PushSubscription.optOut();
         await setDoc(
           doc(db, "users", user.uid),
-          { oneSignalId: subId },
+          { notificationsEnabled: false },
           { merge: true },
         );
+        setEnabled(false);
       }
 
-      setEnabled(true);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
@@ -82,53 +88,57 @@ export default function PrayerReminder({ user, todayDone }) {
           🔔 Prayer Reminder
         </p>
 
-        {/* مش مسجل */}
         {!user && (
           <p className="text-sm" style={{ color: "#ffffff50" }}>
             Sign in first to enable reminders ✝
           </p>
         )}
 
-        {/* مسجل ومش enabled */}
-        {user && !enabled && (
+        {user && (
           <div>
             <p className="text-white/50 text-sm mb-4">
-              Get notified daily to pray even when the app is closed 🙏
+              {enabled
+                ? "You'll get daily prayer reminders 🙏"
+                : "Get notified daily to pray even when the app is closed 🙏"}
             </p>
+
             <button
-              onClick={enableNotifications}
+              onClick={toggleNotifications}
               disabled={loading}
               className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
-              style={{
-                background: "rgba(255,153,51,.15)",
-                border: "1px solid #ff993366",
-                color: "#ff9933",
-              }}
+              style={
+                enabled
+                  ? {
+                      background: "rgba(255,80,80,.15)",
+                      border: "1px solid #ff505066",
+                      color: "#ff6b6b",
+                    }
+                  : {
+                      background: "rgba(255,153,51,.15)",
+                      border: "1px solid #ff993366",
+                      color: "#ff9933",
+                    }
+              }
             >
-              {loading ? "Setting up..." : "🔔 Enable Notifications"}
+              {loading
+                ? "Please wait..."
+                : enabled
+                  ? "🔕 Disable Notifications"
+                  : "🔔 Enable Notifications"}
             </button>
-          </div>
-        )}
 
-        {/* enabled */}
-        {user && enabled && (
-          <div>
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium mb-3"
-              style={{
-                background: "rgba(80,200,120,.15)",
-                border: "1px solid #50c87844",
-                color: "#50c878",
-              }}
-            >
-              ✅ Notifications enabled!
-            </div>
             {saved && (
-              <p className="text-xs mt-2" style={{ color: "#50c878" }}>
-                ✓ Reminder saved successfully
+              <p
+                className="text-xs mt-3"
+                style={{ color: enabled ? "#50c878" : "#ff6b6b" }}
+              >
+                {enabled
+                  ? "✓ Notifications enabled!"
+                  : "✓ Notifications disabled"}
               </p>
             )}
-            {todayDone && (
+
+            {enabled && todayDone && (
               <p className="text-xs mt-3" style={{ color: "#ffffff50" }}>
                 ✝ You already prayed today 🙏
               </p>
