@@ -23,6 +23,7 @@ import {
 } from "firebase/firestore";
 import TopRanking from "../components/TopRanking/TopRanking";
 import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
+import BlessingCelebration from "../components/BlessingCelebration/BlessingCelebration";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -287,6 +288,7 @@ export default function Streak() {
   const [bumping, setBumping] = useState(false);
   const [toast, setToast] = useState({ msg: "", show: false });
   const [prayerLog, setPrayerLog] = useState([]);
+  const [showBlessing, setShowBlessing] = useState(false);
 
   /* auth listener */
   useEffect(() => {
@@ -393,8 +395,7 @@ export default function Streak() {
     setBumping(true);
     setTimeout(() => setBumping(false), 400);
     celebrate();
-    showToast(`🙏 God bless you ${newStreak} days strong`);
-
+    setShowBlessing(true);
     // optimistic prayer log — الـ timestamp هيجي null مؤقتاً
     setPrayerLog((prev) => [
       { date: today, dayOfWeek: dayName, time: null, streak: newStreak },
@@ -1069,7 +1070,13 @@ export default function Streak() {
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
       </div>
       <TopRanking currentUserId={user?.uid} />
-
+      {/* Blessing Celebration */}
+      {showBlessing && (
+        <BlessingCelebration
+          streak={streak}
+          onClose={() => setShowBlessing(false)}
+        />
+      )}
       {/* Toast */}
       <div
         className="fixed bottom-6 left-1/2 -translate-x-1/2 pointer-events-none"
