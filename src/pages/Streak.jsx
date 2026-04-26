@@ -380,9 +380,10 @@ export default function Streak() {
     const prayers = data.prayers || {};
     const savedStreak = data.streak || 0;
 
-    // ── احسب الـ streak مع الخصم لو فاتت أيام ──
+    // ── احسب الـ streak ──
     const prayedToday = !!prayers[today];
-    const correctedStreak = calcStreakFromPrayers(prayers);
+    // دايماً نستخدم calcStreakWithPenalty — هي الوحيدة اللي بتحافظ على الـ streak الصح
+    const correctedStreak = calcStreakWithPenalty(prayers, savedStreak);
 
     // لو الـ streak اتغير بسبب الخصم → حدّث Firestore
     if (correctedStreak !== savedStreak) {
@@ -436,6 +437,7 @@ export default function Streak() {
 
     const snap = await getDoc(doc(db, "users", user.uid));
     const prayers = snap.exists() ? snap.data().prayers || {} : {};
+    const savedStreak = snap.exists() ? snap.data().streak || 0 : 0;
 
     // ── الـ prayers الجديدة بعد إضافة النهارده ──
     const updatedPrayers = {
@@ -443,8 +445,9 @@ export default function Streak() {
       [today]: { dayOfWeek: dayName, time: null },
     };
 
-    // ── احسب الـ streak من الـ prayers الجديدة ──
-    const newStreak = calcStreakFromPrayers(updatedPrayers);
+    // ── احسب الـ streak: اخصم الأيام الفايتة الأول، وبعدين زود 1 ──
+    const streakAfterPenalty = calcStreakWithPenalty(prayers, savedStreak);
+    const newStreak = streakAfterPenalty + 1;
 
     // ── الـ weekHistory بتوقيت مصر ──
     const newWeek = Array(7).fill(false);
