@@ -10,17 +10,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  query,
-  orderBy,
-  limit,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import TopRanking from "../components/TopRanking/TopRanking";
 import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
 import BlessingCelebration from "../components/BlessingCelebration/BlessingCelebration";
@@ -44,8 +34,74 @@ const COLORS = [
   { r: 0, g: 51, b: 102 },
 ];
 
+/* ── توقيت مصر UTC+2 ── */
+function egyptNow() {
+  const now = new Date();
+  // بنضيف 2 ساعة عشان UTC+2
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + 2 * 3600000);
+}
+
+function dateToStr(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return dateToStr(egyptNow());
+}
+
+/* ── جيب آخر يوم صلى فيه من prayers object ── */
+function getLastPrayedDate(prayers = {}) {
+  const dates = Object.keys(prayers).sort((a, b) => b.localeCompare(a));
+  return dates.length > 0 ? dates[0] : null;
+}
+
+/* ── احسب الفرق بالأيام بين تاريخين string ── */
+function daysDiff(dateStrA, dateStrB) {
+  const a = new Date(dateStrA + "T00:00:00");
+  const b = new Date(dateStrB + "T00:00:00");
+  return Math.round((a - b) / (1000 * 60 * 60 * 24));
+}
+
+/* ── احسب الـ streak الصحيح بعد الخصم ── */
+function calcStreakWithPenalty(prayers = {}, savedStreak = 0) {
+  const today = todayStr();
+  const lastDate = getLastPrayedDate(prayers);
+
+  // لو مفيش prayers خالص
+  if (!lastDate) return 0;
+
+  const diff = daysDiff(today, lastDate);
+
+  // صلى النهارده أو امبارح → الـ streak تمام
+  if (diff <= 1) return savedStreak;
+
+  // فات أكتر من يوم → ينقص (diff - 1)
+  const penalty = diff - 1;
+  return Math.max(0, savedStreak - penalty);
+}
+
+/* ── احسب الـ streak من prayers من الصفر (للـ markPrayer) ── */
+function calcStreakFromPrayers(prayers = {}) {
+  let streak = 0;
+  const egypt = egyptNow();
+  let checkDate = new Date(egypt);
+
+  // لو مصلاش النهارده، ابدأ من امبارح
+  const todayPrayed = !!prayers[todayStr()];
+  if (!todayPrayed) checkDate.setDate(checkDate.getDate() - 1);
+
+  while (true) {
+    const dStr = dateToStr(checkDate);
+    if (prayers[dStr]) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else break;
+  }
+  return streak;
 }
 
 /* ──────────────────────────── particle canvas ───────────────────────────── */
@@ -284,7 +340,6 @@ export default function Streak() {
   const [streak, setStreak] = useState(0);
   const [todayDone, setTodayDone] = useState(false);
   const [weekHistory, setWeekHistory] = useState(Array(7).fill(false));
-  const [feed, setFeed] = useState([]);
   const [bumping, setBumping] = useState(false);
   const [toast, setToast] = useState({ msg: "", show: false });
   const [prayerLog, setPrayerLog] = useState([]);
@@ -301,18 +356,6 @@ export default function Streak() {
     return unsub;
   }, []);
 
-  /* live community feed */
-  useEffect(() => {
-    const q = query(
-      collection(db, "community_feed"),
-      orderBy("time", "desc"),
-      limit(12),
-    );
-    return onSnapshot(q, (snap) =>
-      setFeed(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    );
-  }, []);
-
   function resetState() {
     setStreak(0);
     setTodayDone(false);
@@ -320,7 +363,6 @@ export default function Streak() {
     setPrayerLog([]);
   }
 
-  // ── دالة مساعدة: تحوّل prayers object لـ array مرتب ──
   function buildPrayerLog(prayers = {}) {
     return Object.entries(prayers)
       .map(([date, val]) => ({ date, ...val }))
@@ -335,30 +377,35 @@ export default function Streak() {
     }
     const data = snap.data();
     const today = todayStr();
+    const prayers = data.prayers || {};
+    const savedStreak = data.streak || 0;
 
-    // ── حساب كام يوم فات من آخر صلاة ──
-    // ── حساب كام يوم فات من آخر صلاة ──
-    if (data.streak > 0 && data.lastPrayedDate) {
-      const lastDate = new Date(data.lastPrayedDate);
-      const todayDate = new Date(today);
-      const diffDays = Math.floor(
-        (todayDate - lastDate) / (1000 * 60 * 60 * 24),
+    // ── احسب الـ streak مع الخصم لو فاتت أيام ──
+    const prayedToday = !!prayers[today];
+    const correctedStreak = calcStreakFromPrayers(prayers);
+
+    // لو الـ streak اتغير بسبب الخصم → حدّث Firestore
+    if (correctedStreak !== savedStreak) {
+      await setDoc(
+        doc(db, "users", u.uid),
+        { streak: correctedStreak },
+        { merge: true },
       );
-
-      if (diffDays > 1) {
-        const newStreak = Math.max(0, data.streak - diffDays);
-        await setDoc(
-          doc(db, "users", u.uid),
-          { streak: newStreak },
-          { merge: true },
-        );
-        data.streak = newStreak;
-      }
     }
-    setStreak(data.streak || 0);
-    setTodayDone((data.lastPrayedDate || "") === today);
-    setWeekHistory(data.weekHistory || Array(7).fill(false));
-    setPrayerLog(buildPrayerLog(data.prayers));
+
+    // ── الـ weekHistory بتوقيت مصر ──
+    const newWeek = Array(7).fill(false);
+    for (let i = 0; i < 7; i++) {
+      const egypt = egyptNow();
+      egypt.setDate(egypt.getDate() - i);
+      const dStr = dateToStr(egypt);
+      if (prayers[dStr]) newWeek[egypt.getDay()] = true;
+    }
+
+    setStreak(correctedStreak);
+    setTodayDone(prayedToday);
+    setWeekHistory(newWeek);
+    setPrayerLog(buildPrayerLog(prayers));
   }
 
   function showToast(msg) {
@@ -383,12 +430,32 @@ export default function Streak() {
   async function markPrayer() {
     if (!user || todayDone) return;
     const today = todayStr();
-    const dayIdx = new Date().getDay();
+    const egypt = egyptNow();
+    const dayIdx = egypt.getDay();
     const dayName = DAY_NAMES[dayIdx];
-    const newStreak = streak + 1;
-    const newWeek = weekHistory.map((v, i) => (i === dayIdx ? true : v));
 
-    // optimistic UI
+    const snap = await getDoc(doc(db, "users", user.uid));
+    const prayers = snap.exists() ? snap.data().prayers || {} : {};
+
+    // ── الـ prayers الجديدة بعد إضافة النهارده ──
+    const updatedPrayers = {
+      ...prayers,
+      [today]: { dayOfWeek: dayName, time: null },
+    };
+
+    // ── احسب الـ streak من الـ prayers الجديدة ──
+    const newStreak = calcStreakFromPrayers(updatedPrayers);
+
+    // ── الـ weekHistory بتوقيت مصر ──
+    const newWeek = Array(7).fill(false);
+    for (let i = 0; i < 7; i++) {
+      const d = egyptNow();
+      d.setDate(d.getDate() - i);
+      const dStr = dateToStr(d);
+      if (updatedPrayers[dStr]) newWeek[d.getDay()] = true;
+    }
+    newWeek[dayIdx] = true;
+
     setTodayDone(true);
     setStreak(newStreak);
     setWeekHistory(newWeek);
@@ -396,13 +463,12 @@ export default function Streak() {
     setTimeout(() => setBumping(false), 400);
     celebrate();
     setShowBlessing(true);
-    // optimistic prayer log — الـ timestamp هيجي null مؤقتاً
     setPrayerLog((prev) => [
       { date: today, dayOfWeek: dayName, time: null, streak: newStreak },
       ...prev.filter((e) => e.date !== today),
     ]);
 
-    /* ── users/{uid} ── */
+    // ── اكتب على users فقط — مفيش community_feed ──
     await setDoc(
       doc(db, "users", user.uid),
       {
@@ -419,27 +485,15 @@ export default function Streak() {
       { merge: true },
     );
 
-    /* ── community_feed/{uid_date} ── */
-    await setDoc(doc(db, "community_feed", `${user.uid}_${today}`), {
-      displayName: user.displayName || "Anonymous",
-      date: today,
-      dayOfWeek: dayName,
-      time: serverTimestamp(),
-      streak: newStreak,
-    });
-
-    // ── جيب الداتا المحدّثة من Firestore عشان يجيب الـ timestamp الحقيقي ──
     try {
       const updated = await getDoc(doc(db, "users", user.uid));
       if (updated.exists()) {
         setPrayerLog(buildPrayerLog(updated.data().prayers));
       }
-    } catch {
-      // يفضل الـ optimistic data
-    }
+    } catch {}
   }
 
-  const todayDayIdx = new Date().getDay();
+  const todayDayIdx = egyptNow().getDay();
 
   return (
     <>
@@ -465,7 +519,6 @@ export default function Streak() {
         .anim-ring1{animation:ringExpand 2s ease-out infinite;}
         .anim-ring2{animation:ringExpand 2s ease-out 1s infinite;}
         .anim-bump{transform:scale(1.25)!important;}
-        .feed-row{animation:fadeUp .35s ease both;}
         .log-row{animation:fadeUp .3s ease both;}
       `}</style>
 
@@ -864,7 +917,7 @@ export default function Streak() {
               </div>
             </div>
 
-            {/* ── My Prayer Log — من users/{uid} مباشرةً ── */}
+            {/* My Prayer Log */}
             {user && prayerLog.length > 0 && (
               <div
                 className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
@@ -988,88 +1041,12 @@ export default function Streak() {
                 </div>
               </div>
             )}
-
-            {/* Community Feed */}
-            <div
-              className="rounded-3xl p-8 sm:p-10 relative overflow-hidden"
-              style={{ background: "#003366" }}
-            >
-              <Orb
-                cls="anim-orb-1"
-                w={280}
-                h={280}
-                bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                s={{ top: -80, left: -80 }}
-              />
-              <Orb
-                cls="anim-orb-2"
-                w={220}
-                h={220}
-                bg="radial-gradient(circle,#33669930,transparent 70%)"
-                s={{ bottom: -60, right: -60 }}
-              />
-              <div className="relative" style={{ zIndex: 10 }}>
-                <p
-                  className="text-xs uppercase mb-5 text-center"
-                  style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                >
-                  🌍 Community Prayers
-                </p>
-                {feed.length === 0 ? (
-                  <p className="text-center text-white/30 text-sm py-4">
-                    Be the first to pray today ✝
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {feed.map((item, idx) => (
-                      <div
-                        key={item.id}
-                        className="feed-row flex items-center gap-3 rounded-2xl px-4 py-3"
-                        style={{
-                          background: "rgba(255,255,255,.04)",
-                          border: "1px solid #ffffff0a",
-                          animationDelay: `${idx * 0.05}s`,
-                        }}
-                      >
-                        <div
-                          className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-sm font-bold"
-                          style={{
-                            background: "#ff993322",
-                            color: "#ff9933",
-                            border: "2px solid #ff993344",
-                          }}
-                        >
-                          {(item.displayName || "?")[0].toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">
-                            {item.displayName || "Anonymous"}
-                          </p>
-                          <p className="text-xs" style={{ color: "#ffffff50" }}>
-                            Prayed on {item.dayOfWeek}, {item.date}
-                          </p>
-                        </div>
-                        <div
-                          className="shrink-0 flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
-                          style={{
-                            background: "rgba(255,153,51,.12)",
-                            color: "#ff9933",
-                            border: "1px solid #ff993333",
-                          }}
-                        >
-                          🔥 {item.streak}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
       </div>
       <TopRanking currentUserId={user?.uid} />
+
       {/* Blessing Celebration */}
       {showBlessing && (
         <BlessingCelebration
@@ -1077,6 +1054,7 @@ export default function Streak() {
           onClose={() => setShowBlessing(false)}
         />
       )}
+
       {/* Toast */}
       <div
         className="fixed bottom-6 left-1/2 -translate-x-1/2 pointer-events-none"
