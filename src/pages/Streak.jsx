@@ -14,6 +14,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import TopRanking from "../components/TopRanking/TopRanking";
 import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
 import BlessingCelebration from "../components/BlessingCelebration/BlessingCelebration";
+import DailyVerse from "../components/DailyVerse/DailyVerse";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -866,6 +867,7 @@ export default function Streak() {
               </div>
             </div>
             <PrayerReminder user={user} todayDone={todayDone} />
+            <DailyVerse />
 
             {/* Milestones */}
             <div
