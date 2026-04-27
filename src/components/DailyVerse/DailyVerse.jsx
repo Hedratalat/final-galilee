@@ -289,16 +289,15 @@ export default function DailyVerse() {
 
   return (
     <div
-      className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+      className="rounded-3xl p-5 sm:p-8 md:p-10 mb-5 relative overflow-hidden"
       style={{ background: "#003366" }}
-      dir="rtl"
     >
       {/* orbs */}
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
-          width: 280,
-          height: 280,
+          width: "clamp(140px, 40vw, 280px)",
+          height: "clamp(140px, 40vw, 280px)",
           background: `radial-gradient(circle,${moodColor}22,transparent 70%)`,
           top: -80,
           right: -80,
@@ -308,8 +307,8 @@ export default function DailyVerse() {
       <div
         className="absolute rounded-full pointer-events-none"
         style={{
-          width: 200,
-          height: 200,
+          width: "clamp(100px, 28vw, 200px)",
+          height: "clamp(100px, 28vw, 200px)",
           background: `radial-gradient(circle,${moodColor}15,transparent 70%)`,
           bottom: -60,
           left: -60,
@@ -317,15 +316,11 @@ export default function DailyVerse() {
         }}
       />
 
-      <div className="relative" style={{ zIndex: 10 }}>
+      <div className="relative z-10">
         {/* العنوان */}
         <p
-          className="text-xs uppercase mb-6 text-center"
-          style={{
-            color: "#ffffff70",
-            letterSpacing: "0.3em",
-            fontFamily: "'Playfair Display', serif",
-          }}
+          className="text-xs uppercase mb-5 text-center "
+          style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
         >
           🕊️ Verse of the Day
         </p>
@@ -333,25 +328,25 @@ export default function DailyVerse() {
         {/* لو مش مختار بعد */}
         {!selectedMood && (
           <>
-            <p className="text-center text-white/60 text-sm mb-6">
+            <p className="text-center text-white/60 text-xs sm:text-sm mb-5 sm:mb-6 px-2">
               How are you feeling today? Choose your mood and receive a verse
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {MOODS.map((mood) => (
                 <button
                   key={mood.key}
                   onClick={() => chooseMood(mood.key)}
-                  className="flex flex-col items-center gap-2 rounded-2xl py-4 px-3 transition-all duration-300 hover:scale-105 active:scale-95"
+                  className="flex flex-col items-center gap-2 rounded-2xl py-3 sm:py-4 px-2 sm:px-3 transition-all duration-300 hover:scale-105 active:scale-95 w-full border-0 cursor-pointer"
                   style={{
                     background: `${mood.color}15`,
                     border: `1px solid ${mood.color}44`,
                   }}
                 >
-                  <span style={{ fontSize: "clamp(1.8rem,4vw,2.5rem)" }}>
+                  <span className="text-3xl sm:text-4xl leading-none">
                     {mood.emoji}
                   </span>
                   <span
-                    className="text-sm font-semibold"
+                    className="text-xs sm:text-sm font-semibold"
                     style={{ color: mood.color }}
                   >
                     {mood.label}
@@ -371,12 +366,12 @@ export default function DailyVerse() {
               transition: "all 0.5s ease",
             }}
           >
-            {/* المزاج المختار */}
-            <div className="flex items-center justify-center gap-2 mb-6">
+            {/* المزاج المختار - badges */}
+            <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-5 sm:mb-6">
               {MOODS.map((m) => (
                 <div
                   key={m.key}
-                  className="flex items-center gap-1 rounded-full px-3 py-1 text-xs"
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs transition-all duration-300"
                   style={{
                     background:
                       selectedMood === m.key ? `${m.color}22` : "transparent",
@@ -384,11 +379,13 @@ export default function DailyVerse() {
                       selectedMood === m.key
                         ? `1px solid ${m.color}55`
                         : "1px solid transparent",
-                    color: selectedMood === m.key ? m.color : "#ffffff30",
-                    transition: "all 0.3s",
+                    color:
+                      selectedMood === m.key
+                        ? m.color
+                        : "rgba(255,255,255,0.18)",
                   }}
                 >
-                  <span>{m.emoji}</span>
+                  <span className="text-xs">{m.emoji}</span>
                   <span>{m.label}</span>
                 </div>
               ))}
@@ -396,7 +393,7 @@ export default function DailyVerse() {
 
             {/* الآية */}
             <div
-              className="rounded-2xl p-6 text-center relative"
+              className="rounded-2xl p-4 sm:p-6 text-center relative"
               style={{
                 background: `${moodColor}0d`,
                 border: `1px solid ${moodColor}33`,
@@ -405,22 +402,16 @@ export default function DailyVerse() {
             >
               {/* علامة الاقتباس */}
               <div
-                style={{
-                  fontSize: "4rem",
-                  lineHeight: 1,
-                  color: moodColor,
-                  opacity: 0.2,
-                  fontFamily: "serif",
-                  marginBottom: -16,
-                }}
+                className="text-5xl sm:text-6xl leading-none font-serif opacity-20 -mb-3"
+                style={{ color: moodColor }}
               >
                 "
               </div>
 
               <p
-                className="text-white leading-loose mb-4"
+                className="text-white leading-loose mb-4 text-sm sm:text-base"
+                dir="rtl"
                 style={{
-                  fontSize: "clamp(0.9rem,2vw,1.05rem)",
                   fontFamily: "'Playfair Display', serif",
                   lineHeight: 1.9,
                 }}
@@ -436,11 +427,8 @@ export default function DailyVerse() {
                 }}
               >
                 <span
-                  style={{
-                    color: moodColor,
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                  }}
+                  className="text-xs font-semibold"
+                  style={{ color: moodColor }}
                 >
                   ✝ {verse.ref}
                 </span>
@@ -449,7 +437,7 @@ export default function DailyVerse() {
 
             {/* رسالة صغيرة */}
             <p className="text-center text-white/40 text-xs mt-4 tracking-wide uppercase">
-              Today’s Verse ✨
+              Today's Verse ✨
             </p>
           </div>
         )}
