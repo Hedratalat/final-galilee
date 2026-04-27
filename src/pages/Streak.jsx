@@ -34,12 +34,10 @@ const COLORS = [
   { r: 0, g: 51, b: 102 },
 ];
 
-/* ── توقيت مصر UTC+2 ── */
 function egyptNow() {
-  const now = new Date();
-  // بنضيف 2 ساعة عشان UTC+2
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  return new Date(utc + 2 * 3600000);
+  return new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" }),
+  );
 }
 
 function dateToStr(date) {
