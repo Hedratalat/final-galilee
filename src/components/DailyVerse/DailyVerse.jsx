@@ -3,12 +3,15 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 
 /* ── التواريخ بتوقيت مصر ── */
+// صح ✅
 function egyptTodayStr() {
-  return new Date(
+  const egypt = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Africa/Cairo" }),
-  )
-    .toISOString()
-    .slice(0, 10);
+  );
+  const year = egypt.getFullYear();
+  const month = String(egypt.getMonth() + 1).padStart(2, "0");
+  const day = String(egypt.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /* ── الآيات ── */
