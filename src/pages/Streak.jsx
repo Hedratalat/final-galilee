@@ -381,14 +381,27 @@ export default function Streak() {
 
     // ── احسب الـ streak ──
     const prayedToday = !!prayers[today];
-    // دايماً نستخدم calcStreakWithPenalty — هي الوحيدة اللي بتحافظ على الـ streak الصح
-    const correctedStreak = calcStreakWithPenalty(prayers, savedStreak);
+    // جيب lastPrayedDate من Firestore مش من prayers
+    const lastDate = data.lastPrayedDate;
 
-    // لو الـ streak اتغير بسبب الخصم → حدّث Firestore
+    // احسب الفرق بين النهارده وآخر يوم اتحسب فيه
+    const diff = lastDate ? daysDiff(today, lastDate) : 0;
+
+    // الأيام اللي عدت كاملة — يوم النهارده لسه شغال مش بيتخصم
+    const missedDays = Math.max(0, diff - 1);
+
+    // طبق الخصم
+    const correctedStreak = Math.max(0, savedStreak - missedDays);
+
+    // لو فيه خصم → اكتب في Firestore وحدّث lastPrayedDate
+    // عشان أي refresh جاي يلاقي diff = 0 ومش يخصم تاني
     if (correctedStreak !== savedStreak) {
       await setDoc(
         doc(db, "users", u.uid),
-        { streak: correctedStreak },
+        {
+          streak: correctedStreak,
+          lastPrayedDate: today,
+        },
         { merge: true },
       );
     }
@@ -444,8 +457,10 @@ export default function Streak() {
       [today]: { dayOfWeek: dayName, time: null },
     };
 
-    // ── احسب الـ streak: اخصم الأيام الفايتة الأول، وبعدين زود 1 ──
-    const streakAfterPenalty = calcStreakWithPenalty(prayers, savedStreak);
+    const lastDate = snap.data().lastPrayedDate;
+    const diff = lastDate ? daysDiff(today, lastDate) : 0;
+    const missedDays = Math.max(0, diff - 1);
+    const streakAfterPenalty = Math.max(0, savedStreak - missedDays);
     const newStreak = streakAfterPenalty + 1;
 
     // ── الـ weekHistory بتوقيت مصر ──
