@@ -15,6 +15,7 @@ import TopRanking from "../components/TopRanking/TopRanking";
 import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
 import BlessingCelebration from "../components/BlessingCelebration/BlessingCelebration";
 import DailyVerse from "../components/DailyVerse/DailyVerse";
+import ApprovalGate from "../components/ApprovalGate/ApprovalGate";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -336,6 +337,8 @@ function Orb({ cls, w, h, bg, s }) {
 export default function Streak() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [approved, setApproved] = useState(false);
+
   const [streak, setStreak] = useState(0);
   const [todayDone, setTodayDone] = useState(false);
   const [weekHistory, setWeekHistory] = useState(Array(7).fill(false));
@@ -360,6 +363,7 @@ export default function Streak() {
     setTodayDone(false);
     setWeekHistory(Array(7).fill(false));
     setPrayerLog([]);
+    setApproved(false);
   }
 
   function buildPrayerLog(prayers = {}) {
@@ -378,7 +382,9 @@ export default function Streak() {
     const today = todayStr();
     const prayers = data.prayers || {};
     const savedStreak = data.streak || 0;
-
+    const isApproved = data.approved === true;
+    setApproved(isApproved);
+    if (!isApproved) return;
     // ── احسب الـ streak ──
     const prayedToday = !!prayers[today];
     // جيب lastPrayedDate من Firestore مش من prayers
@@ -441,7 +447,7 @@ export default function Streak() {
   }
 
   async function markPrayer() {
-    if (!user || todayDone) return;
+    if (!user || !approved || todayDone) return;
     const today = todayStr();
     const egypt = egyptNow();
     const dayIdx = egypt.getDay();
@@ -582,7 +588,6 @@ export default function Streak() {
                 Daily devotion tracker
               </p>
             </div>
-
             {/* Auth banner */}
             {!authLoading && !user && (
               <div
@@ -639,424 +644,437 @@ export default function Streak() {
                 </div>
               </div>
             )}
-
             {/* User pill */}
-            {!authLoading && user && (
-              <div
-                className="flex items-center justify-between rounded-2xl px-5 py-3 mb-5"
-                style={{
-                  background: "rgba(255,153,51,.08)",
-                  border: "1px solid #ff993322",
-                }}
-              >
-                <span className="text-sm font-medium text-white/80">
-                  {user.displayName}
-                </span>
-                <button
-                  onClick={handleSignOut}
-                  className="text-xs px-3 py-1 rounded-lg transition-all hover:scale-105"
-                  style={{ color: "#ff9933", border: "1px solid #ff993344" }}
-                >
-                  Sign out
-                </button>
-              </div>
+            {!authLoading && user && !approved && (
+              <ApprovalGate user={user} onSignOut={handleSignOut} />
             )}
-
-            {/* Streak Card */}
-            <div
-              className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-              style={{ background: "#003366" }}
-            >
-              <Orb
-                cls="anim-orb-1"
-                w={280}
-                h={280}
-                bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                s={{ top: -80, left: -80 }}
-              />
-              <Orb
-                cls="anim-orb-2"
-                w={220}
-                h={220}
-                bg="radial-gradient(circle,#33669930,transparent 70%)"
-                s={{ bottom: -60, right: -60 }}
-              />
-              <Orb
-                cls="anim-orb-3"
-                w={150}
-                h={150}
-                bg="radial-gradient(circle,#ff993318,transparent 70%)"
-                s={{ top: "40%", right: "10%" }}
-              />
-              <div className="relative text-center" style={{ zIndex: 10 }}>
-                <div className="flex items-center justify-center gap-6">
-                  <span
-                    className="anim-flame inline-block"
-                    style={{ fontSize: "clamp(2.5rem,6vw,4rem)" }}
-                  >
-                    🔥
-                  </span>
+            {!authLoading && (
+              <div className={!user || !approved ? "pointer-events-none" : ""}>
+                {user && approved && (
                   <div
-                    className={`transition-transform duration-300 ${bumping ? "anim-bump" : ""}`}
+                    className="flex items-center justify-between rounded-2xl px-5 py-3 mb-5"
                     style={{
-                      fontFamily: "'Playfair Display',serif",
-                      fontWeight: 700,
-                      color: "#ff9933",
-                      lineHeight: 1,
-                      fontSize: "clamp(4rem,10vw,7rem)",
+                      background: "rgba(255,153,51,.08)",
+                      border: "1px solid #ff993322",
                     }}
                   >
-                    {streak}
-                  </div>
-                </div>
-                <p
-                  className="text-xs uppercase mt-3"
-                  style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                >
-                  days in a row
-                </p>
-                <div className="flex justify-center gap-2 sm:gap-3 mt-6 flex-wrap">
-                  {DAYS.map((d, i) => (
-                    <div key={i} className="flex flex-col items-center gap-1">
-                      <div
-                        className={[
-                          "rounded-full border-2 flex items-center justify-center transition-all duration-300",
-                          weekHistory[i] ? "" : "bg-white/5",
-                          i === todayDayIdx ? "anim-today" : "",
-                        ].join(" ")}
-                        style={{
-                          width: "clamp(32px,5vw,48px)",
-                          height: "clamp(32px,5vw,48px)",
-                          fontSize: "clamp(.7rem,1.5vw,1rem)",
-                          background: weekHistory[i] ? "#ff9933" : undefined,
-                          borderColor: weekHistory[i]
-                            ? "#ff9933"
-                            : i === todayDayIdx
-                              ? "rgba(255,255,255,.4)"
-                              : "#336699",
-                          color: weekHistory[i] ? "#fff" : "transparent",
-                          boxShadow: weekHistory[i]
-                            ? "0 0 16px #ff993388"
-                            : undefined,
-                        }}
-                      >
-                        {weekHistory[i] ? "✓" : ""}
-                      </div>
-                      <span
-                        className="text-xs"
-                        style={{
-                          color: "#ffffff50",
-                          fontSize: "clamp(.55rem,1.2vw,.75rem)",
-                          letterSpacing: 1,
-                        }}
-                      >
-                        {d}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Pray Card */}
-            <div
-              className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-              style={{ background: "#003366" }}
-            >
-              <Orb
-                cls="anim-orb-1"
-                w={280}
-                h={280}
-                bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                s={{ top: -80, left: -80 }}
-              />
-              <Orb
-                cls="anim-orb-2"
-                w={220}
-                h={220}
-                bg="radial-gradient(circle,#33669930,transparent 70%)"
-                s={{ bottom: -60, right: -60 }}
-              />
-              <div className="relative text-center" style={{ zIndex: 10 }}>
-                <p
-                  className="text-xs uppercase mb-6"
-                  style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                >
-                  Today's prayer
-                </p>
-                {!user && (
-                  <p className="text-white/40 text-sm mb-4">
-                    Sign in above to mark your prayer ✝
-                  </p>
-                )}
-                <div className="relative inline-flex items-center justify-center my-2">
-                  <div
-                    className="anim-ring1 absolute rounded-full border pointer-events-none"
-                    style={{
-                      width: "clamp(160px,22vw,200px)",
-                      height: "clamp(160px,22vw,200px)",
-                      borderColor: "#ff993322",
-                    }}
-                  />
-                  <div
-                    className="anim-ring2 absolute rounded-full border pointer-events-none"
-                    style={{
-                      width: "clamp(160px,22vw,200px)",
-                      height: "clamp(160px,22vw,200px)",
-                      borderColor: "#ff993322",
-                    }}
-                  />
-                  <button
-                    onClick={markPrayer}
-                    disabled={!user || todayDone}
-                    className="flex flex-col items-center justify-center rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-default disabled:opacity-60"
-                    style={{
-                      width: "clamp(130px,18vw,170px)",
-                      height: "clamp(130px,18vw,170px)",
-                      border: `3px solid ${todayDone ? "#ff9933" : !user ? "#ffffff22" : "#ff993366"}`,
-                      background: todayDone
-                        ? "rgba(255,153,51,.25)"
-                        : "rgba(255,153,51,.1)",
-                      boxShadow: todayDone ? "0 0 40px #ff993555" : "none",
-                      gap: 8,
-                    }}
-                  >
-                    <div
-                      className="relative"
-                      style={{
-                        width: "clamp(32px,4vw,44px)",
-                        height: "clamp(32px,4vw,44px)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "absolute",
-                          left: "50%",
-                          top: "5%",
-                          transform: "translateX(-50%)",
-                          width: 7,
-                          height: "90%",
-                          background: "#ff9933",
-                          borderRadius: 4,
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: "28%",
-                          left: "5%",
-                          width: "90%",
-                          height: 7,
-                          background: "#ff9933",
-                          borderRadius: 4,
-                        }}
-                      />
-                    </div>
-                    <span
-                      style={{
-                        fontSize: "clamp(.65rem,1.2vw,.85rem)",
-                        letterSpacing: 3,
-                        color: "#ff9933",
-                        textTransform: "uppercase",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {!user ? "Locked" : todayDone ? "Done" : "Pray"}
+                    <span className="text-sm font-medium text-white/80">
+                      {user.displayName}
                     </span>
-                  </button>
-                </div>
-                {todayDone && (
-                  <div className="mt-5">
-                    <span
-                      className="inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium"
+                    <button
+                      onClick={handleSignOut}
+                      className="text-xs px-3 py-1 rounded-lg transition-all hover:scale-105"
                       style={{
-                        background: "rgba(255,153,51,.15)",
+                        color: "#ff9933",
                         border: "1px solid #ff993344",
-                        color: "#ff9933",
                       }}
                     >
-                      ✓ Prayed today — streak +1
-                    </span>
+                      Sign out
+                    </button>
                   </div>
                 )}
-              </div>
-            </div>
-            <PrayerReminder user={user} todayDone={todayDone} />
-            <DailyVerse />
 
-            {/* Milestones */}
-            <div
-              className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-              style={{ background: "#003366" }}
-            >
-              <Orb
-                cls="anim-orb-1"
-                w={280}
-                h={280}
-                bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                s={{ top: -80, left: -80 }}
-              />
-              <Orb
-                cls="anim-orb-2"
-                w={220}
-                h={220}
-                bg="radial-gradient(circle,#33669930,transparent 70%)"
-                s={{ bottom: -60, right: -60 }}
-              />
-              <div className="relative text-center" style={{ zIndex: 10 }}>
-                <p
-                  className="text-xs uppercase mb-5"
-                  style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                {/* Streak Card */}
+                <div
+                  className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                  style={{ background: "#003366" }}
                 >
-                  Milestones
-                </p>
-                <div className="flex gap-3 justify-center flex-wrap">
-                  {MILESTONES.map((m) => {
-                    const reached = streak >= m;
-                    return (
+                  <Orb
+                    cls="anim-orb-1"
+                    w={280}
+                    h={280}
+                    bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                    s={{ top: -80, left: -80 }}
+                  />
+                  <Orb
+                    cls="anim-orb-2"
+                    w={220}
+                    h={220}
+                    bg="radial-gradient(circle,#33669930,transparent 70%)"
+                    s={{ bottom: -60, right: -60 }}
+                  />
+                  <Orb
+                    cls="anim-orb-3"
+                    w={150}
+                    h={150}
+                    bg="radial-gradient(circle,#ff993318,transparent 70%)"
+                    s={{ top: "40%", right: "10%" }}
+                  />
+                  <div className="relative text-center" style={{ zIndex: 10 }}>
+                    <div className="flex items-center justify-center gap-6">
+                      <span
+                        className="anim-flame inline-block"
+                        style={{ fontSize: "clamp(2.5rem,6vw,4rem)" }}
+                      >
+                        🔥
+                      </span>
                       <div
-                        key={m}
-                        className="flex items-center gap-1 rounded-xl px-4 py-2 text-sm transition-all duration-300"
+                        className={`transition-transform duration-300 ${bumping ? "anim-bump" : ""}`}
                         style={{
-                          border: `1px solid ${reached ? "#ff993355" : "#33669944"}`,
-                          color: reached ? "#ff9933" : "#ffffff70",
-                          background: reached
-                            ? "rgba(255,153,51,.1)"
-                            : "rgba(255,255,255,.04)",
-                          boxShadow: reached ? "0 0 14px #ff993322" : "none",
-                          fontSize: "clamp(.7rem,1.3vw,.9rem)",
+                          fontFamily: "'Playfair Display',serif",
+                          fontWeight: 700,
+                          color: "#ff9933",
+                          lineHeight: 1,
+                          fontSize: "clamp(4rem,10vw,7rem)",
                         }}
                       >
-                        {reached ? "🏆" : "🔒"} {m} days
+                        {streak}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* My Prayer Log */}
-            {user && prayerLog.length > 0 && (
-              <div
-                className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-                style={{ background: "#003366" }}
-              >
-                <Orb
-                  cls="anim-orb-1"
-                  w={280}
-                  h={280}
-                  bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                  s={{ top: -80, left: -80 }}
-                />
-                <Orb
-                  cls="anim-orb-2"
-                  w={220}
-                  h={220}
-                  bg="radial-gradient(circle,#33669930,transparent 70%)"
-                  s={{ bottom: -60, right: -60 }}
-                />
-                <div className="relative" style={{ zIndex: 10 }}>
-                  <p
-                    className="text-xs uppercase mb-5 text-center"
-                    style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                  >
-                    📖 My Prayer Log
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {prayerLog.map((entry, idx) => (
-                      <div
-                        key={entry.date}
-                        className="log-row flex items-center justify-between rounded-2xl px-4 py-3"
-                        style={{
-                          background:
-                            entry.date === todayStr()
-                              ? "rgba(255,153,51,.08)"
-                              : "rgba(255,255,255,.04)",
-                          border:
-                            entry.date === todayStr()
-                              ? "1px solid #ff993333"
-                              : "1px solid #ffffff0a",
-                          animationDelay: `${idx * 0.04}s`,
-                        }}
-                      >
-                        <div className="flex items-center gap-3">
+                    </div>
+                    <p
+                      className="text-xs uppercase mt-3"
+                      style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                    >
+                      days in a row
+                    </p>
+                    <div className="flex justify-center gap-2 sm:gap-3 mt-6 flex-wrap">
+                      {DAYS.map((d, i) => (
+                        <div
+                          key={i}
+                          className="flex flex-col items-center gap-1"
+                        >
                           <div
-                            className="relative shrink-0"
-                            style={{ width: 18, height: 18 }}
-                          >
-                            <div
-                              style={{
-                                position: "absolute",
-                                left: "50%",
-                                top: "5%",
-                                transform: "translateX(-50%)",
-                                width: 3,
-                                height: "90%",
-                                background: "#ff9933",
-                                borderRadius: 2,
-                              }}
-                            />
-                            <div
-                              style={{
-                                position: "absolute",
-                                top: "28%",
-                                left: "5%",
-                                width: "90%",
-                                height: 3,
-                                background: "#ff9933",
-                                borderRadius: 2,
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-white">
-                              {entry.dayOfWeek}
-                              {entry.date === todayStr() && (
-                                <span
-                                  className="ml-2 text-xs"
-                                  style={{ color: "#ff9933" }}
-                                >
-                                  • Today
-                                </span>
-                              )}
-                            </p>
-                            <p
-                              className="text-xs"
-                              style={{ color: "#ffffff50" }}
-                            >
-                              {entry.date}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className="text-xs"
-                            style={{ color: "#ffffff60" }}
-                          >
-                            {entry.time?.toDate
-                              ? entry.time
-                                  .toDate()
-                                  .toLocaleTimeString("en-US", {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
-                              : "—"}
-                          </span>
-                          <span
-                            className="text-xs rounded-full px-3 py-1 font-semibold"
+                            className={[
+                              "rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                              weekHistory[i] ? "" : "bg-white/5",
+                              i === todayDayIdx ? "anim-today" : "",
+                            ].join(" ")}
                             style={{
-                              background: "rgba(255,153,51,.12)",
-                              color: "#ff9933",
-                              border: "1px solid #ff993333",
+                              width: "clamp(32px,5vw,48px)",
+                              height: "clamp(32px,5vw,48px)",
+                              fontSize: "clamp(.7rem,1.5vw,1rem)",
+                              background: weekHistory[i]
+                                ? "#ff9933"
+                                : undefined,
+                              borderColor: weekHistory[i]
+                                ? "#ff9933"
+                                : i === todayDayIdx
+                                  ? "rgba(255,255,255,.4)"
+                                  : "#336699",
+                              color: weekHistory[i] ? "#fff" : "transparent",
+                              boxShadow: weekHistory[i]
+                                ? "0 0 16px #ff993388"
+                                : undefined,
                             }}
                           >
-                            🔥 {entry.streak}
+                            {weekHistory[i] ? "✓" : ""}
+                          </div>
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "#ffffff50",
+                              fontSize: "clamp(.55rem,1.2vw,.75rem)",
+                              letterSpacing: 1,
+                            }}
+                          >
+                            {d}
                           </span>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
+                {/* Pray Card */}
+                <div
+                  className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                  style={{ background: "#003366" }}
+                >
+                  <Orb
+                    cls="anim-orb-1"
+                    w={280}
+                    h={280}
+                    bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                    s={{ top: -80, left: -80 }}
+                  />
+                  <Orb
+                    cls="anim-orb-2"
+                    w={220}
+                    h={220}
+                    bg="radial-gradient(circle,#33669930,transparent 70%)"
+                    s={{ bottom: -60, right: -60 }}
+                  />
+                  <div className="relative text-center" style={{ zIndex: 10 }}>
+                    <p
+                      className="text-xs uppercase mb-6"
+                      style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                    >
+                      Today's prayer
+                    </p>
+                    {!user && (
+                      <p className="text-white/40 text-sm mb-4">
+                        Sign in above to mark your prayer ✝
+                      </p>
+                    )}
+                    <div className="relative inline-flex items-center justify-center my-2">
+                      <div
+                        className="anim-ring1 absolute rounded-full border pointer-events-none"
+                        style={{
+                          width: "clamp(160px,22vw,200px)",
+                          height: "clamp(160px,22vw,200px)",
+                          borderColor: "#ff993322",
+                        }}
+                      />
+                      <div
+                        className="anim-ring2 absolute rounded-full border pointer-events-none"
+                        style={{
+                          width: "clamp(160px,22vw,200px)",
+                          height: "clamp(160px,22vw,200px)",
+                          borderColor: "#ff993322",
+                        }}
+                      />
+                      <button
+                        onClick={markPrayer}
+                        disabled={!user || todayDone}
+                        className="flex flex-col items-center justify-center rounded-full transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-default disabled:opacity-60"
+                        style={{
+                          width: "clamp(130px,18vw,170px)",
+                          height: "clamp(130px,18vw,170px)",
+                          border: `3px solid ${todayDone ? "#ff9933" : !user ? "#ffffff22" : "#ff993366"}`,
+                          background: todayDone
+                            ? "rgba(255,153,51,.25)"
+                            : "rgba(255,153,51,.1)",
+                          boxShadow: todayDone ? "0 0 40px #ff993555" : "none",
+                          gap: 8,
+                        }}
+                      >
+                        <div
+                          className="relative"
+                          style={{
+                            width: "clamp(32px,4vw,44px)",
+                            height: "clamp(32px,4vw,44px)",
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: "50%",
+                              top: "5%",
+                              transform: "translateX(-50%)",
+                              width: 7,
+                              height: "90%",
+                              background: "#ff9933",
+                              borderRadius: 4,
+                            }}
+                          />
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "28%",
+                              left: "5%",
+                              width: "90%",
+                              height: 7,
+                              background: "#ff9933",
+                              borderRadius: 4,
+                            }}
+                          />
+                        </div>
+                        <span
+                          style={{
+                            fontSize: "clamp(.65rem,1.2vw,.85rem)",
+                            letterSpacing: 3,
+                            color: "#ff9933",
+                            textTransform: "uppercase",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {!user ? "Locked" : todayDone ? "Done" : "Pray"}
+                        </span>
+                      </button>
+                    </div>
+                    {todayDone && (
+                      <div className="mt-5">
+                        <span
+                          className="inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium"
+                          style={{
+                            background: "rgba(255,153,51,.15)",
+                            border: "1px solid #ff993344",
+                            color: "#ff9933",
+                          }}
+                        >
+                          ✓ Prayed today — streak +1
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <PrayerReminder user={user} todayDone={todayDone} />
+                <DailyVerse />
+                {/* Milestones */}
+                <div
+                  className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                  style={{ background: "#003366" }}
+                >
+                  <Orb
+                    cls="anim-orb-1"
+                    w={280}
+                    h={280}
+                    bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                    s={{ top: -80, left: -80 }}
+                  />
+                  <Orb
+                    cls="anim-orb-2"
+                    w={220}
+                    h={220}
+                    bg="radial-gradient(circle,#33669930,transparent 70%)"
+                    s={{ bottom: -60, right: -60 }}
+                  />
+                  <div className="relative text-center" style={{ zIndex: 10 }}>
+                    <p
+                      className="text-xs uppercase mb-5"
+                      style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                    >
+                      Milestones
+                    </p>
+                    <div className="flex gap-3 justify-center flex-wrap">
+                      {MILESTONES.map((m) => {
+                        const reached = streak >= m;
+                        return (
+                          <div
+                            key={m}
+                            className="flex items-center gap-1 rounded-xl px-4 py-2 text-sm transition-all duration-300"
+                            style={{
+                              border: `1px solid ${reached ? "#ff993355" : "#33669944"}`,
+                              color: reached ? "#ff9933" : "#ffffff70",
+                              background: reached
+                                ? "rgba(255,153,51,.1)"
+                                : "rgba(255,255,255,.04)",
+                              boxShadow: reached
+                                ? "0 0 14px #ff993322"
+                                : "none",
+                              fontSize: "clamp(.7rem,1.3vw,.9rem)",
+                            }}
+                          >
+                            {reached ? "🏆" : "🔒"} {m} days
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* My Prayer Log */}
+                {user && prayerLog.length > 0 && (
+                  <div
+                    className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                    style={{ background: "#003366" }}
+                  >
+                    <Orb
+                      cls="anim-orb-1"
+                      w={280}
+                      h={280}
+                      bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                      s={{ top: -80, left: -80 }}
+                    />
+                    <Orb
+                      cls="anim-orb-2"
+                      w={220}
+                      h={220}
+                      bg="radial-gradient(circle,#33669930,transparent 70%)"
+                      s={{ bottom: -60, right: -60 }}
+                    />
+                    <div className="relative" style={{ zIndex: 10 }}>
+                      <p
+                        className="text-xs uppercase mb-5 text-center"
+                        style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                      >
+                        📖 My Prayer Log
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {prayerLog.map((entry, idx) => (
+                          <div
+                            key={entry.date}
+                            className="log-row flex items-center justify-between rounded-2xl px-4 py-3"
+                            style={{
+                              background:
+                                entry.date === todayStr()
+                                  ? "rgba(255,153,51,.08)"
+                                  : "rgba(255,255,255,.04)",
+                              border:
+                                entry.date === todayStr()
+                                  ? "1px solid #ff993333"
+                                  : "1px solid #ffffff0a",
+                              animationDelay: `${idx * 0.04}s`,
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="relative shrink-0"
+                                style={{ width: 18, height: 18 }}
+                              >
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    left: "50%",
+                                    top: "5%",
+                                    transform: "translateX(-50%)",
+                                    width: 3,
+                                    height: "90%",
+                                    background: "#ff9933",
+                                    borderRadius: 2,
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    top: "28%",
+                                    left: "5%",
+                                    width: "90%",
+                                    height: 3,
+                                    background: "#ff9933",
+                                    borderRadius: 2,
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {entry.dayOfWeek}
+                                  {entry.date === todayStr() && (
+                                    <span
+                                      className="ml-2 text-xs"
+                                      style={{ color: "#ff9933" }}
+                                    >
+                                      • Today
+                                    </span>
+                                  )}
+                                </p>
+                                <p
+                                  className="text-xs"
+                                  style={{ color: "#ffffff50" }}
+                                >
+                                  {entry.date}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span
+                                className="text-xs"
+                                style={{ color: "#ffffff60" }}
+                              >
+                                {entry.time?.toDate
+                                  ? entry.time
+                                      .toDate()
+                                      .toLocaleTimeString("en-US", {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
+                                  : "—"}
+                              </span>
+                              <span
+                                className="text-xs rounded-full px-3 py-1 font-semibold"
+                                style={{
+                                  background: "rgba(255,153,51,.12)",
+                                  color: "#ff9933",
+                                  border: "1px solid #ff993333",
+                                }}
+                              >
+                                🔥 {entry.streak}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
