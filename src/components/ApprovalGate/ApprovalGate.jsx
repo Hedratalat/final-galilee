@@ -21,7 +21,10 @@ export default function ApprovalGate({ user, onSignOut }) {
 
   const handleYes = () => {
     const name = user?.displayName || "User";
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}${encodeURIComponent(name)}`;
+    const email = user?.email || "No email";
+    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+      `Hello, I have purchased one of your products and would like to activate my Prayer Streak account.\n\nAccount name: ${name}\nEmail: ${email}`,
+    )}`;
     window.open(url, "_blank");
     setStep("waiting");
   };
