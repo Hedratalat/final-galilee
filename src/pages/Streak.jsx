@@ -402,11 +402,15 @@ export default function Streak() {
     // لو فيه خصم → اكتب في Firestore وحدّث lastPrayedDate
     // عشان أي refresh جاي يلاقي diff = 0 ومش يخصم تاني
     if (correctedStreak !== savedStreak) {
+      const yesterday = new Date(egyptNow());
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = dateToStr(yesterday);
+
       await setDoc(
         doc(db, "users", u.uid),
         {
           streak: correctedStreak,
-          lastPrayedDate: today,
+          lastPrayedDate: yesterdayStr,
         },
         { merge: true },
       );
