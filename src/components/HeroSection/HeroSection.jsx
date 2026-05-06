@@ -70,7 +70,7 @@ export default function HeroSection() {
           <h1 className="text-5xl pb-1 sm:text-5xl lg:text-6xl font-bold font-poppins bg-gradient-to-r from-darkBlue via-blue to-orange bg-clip-text text-transparent mb-4 leading-tight text-center lg:text-left">
             The Place
             <br />
-            <span className="text-5xl sm:text-4xl lg:text-6xl lg:ml-2 font-bold">
+            <span className="text-5xl  lg:text-6xl lg:ml-2 font-bold">
               Where You Meet <span className="lg:ml-1 ">Jesus again</span>
             </span>
           </h1>
