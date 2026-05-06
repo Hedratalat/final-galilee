@@ -353,6 +353,7 @@ export default function Streak() {
     requests: [],
   });
   const [friendsList, setFriendsList] = useState([]);
+  const [confirmRemove, setConfirmRemove] = useState(null);
 
   /* auth listener */
   useEffect(() => {
@@ -528,6 +529,31 @@ export default function Streak() {
   }
 
   const todayDayIdx = egyptNow().getDay();
+
+  async function removeFriend(friendUid) {
+    if (!user) return;
+
+    // جيب الـ friends الحالية
+    const mySnap = await getDoc(doc(db, "users", user.uid));
+    const myFriends = mySnap.data()?.friends || [];
+
+    const friendSnap = await getDoc(doc(db, "users", friendUid));
+    const friendFriends = friendSnap.data()?.friends || [];
+
+    // شيل كل واحد من عند التاني
+    await setDoc(
+      doc(db, "users", user.uid),
+      { friends: myFriends.filter((uid) => uid !== friendUid) },
+      { merge: true },
+    );
+    await setDoc(
+      doc(db, "users", friendUid),
+      { friends: friendFriends.filter((uid) => uid !== user.uid) },
+      { merge: true },
+    );
+
+    setFriendsList((prev) => prev.filter((f) => f.uid !== friendUid));
+  }
 
   return (
     <>
@@ -1181,16 +1207,34 @@ export default function Streak() {
                                 )}
                               </div>
                             </div>
-                            <span
-                              className="text-sm font-bold rounded-full px-3 py-1"
-                              style={{
-                                background: "rgba(255,153,51,.12)",
-                                color: "#ff9933",
-                                border: "1px solid #ff993333",
-                              }}
-                            >
-                              🔥 {f.streak}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-sm font-bold rounded-full px-3 py-1"
+                                style={{
+                                  background: "rgba(255,153,51,.12)",
+                                  color: "#ff9933",
+                                  border: "1px solid #ff993333",
+                                }}
+                              >
+                                🔥 {f.streak}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  setConfirmRemove({
+                                    uid: f.uid,
+                                    name: f.displayName,
+                                  })
+                                }
+                                className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:scale-105"
+                                style={{
+                                  background: "rgba(255,50,50,.1)",
+                                  border: "1px solid #ff333344",
+                                  color: "#ff6666",
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -1203,6 +1247,51 @@ export default function Streak() {
         </div>
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
       </div>
+      {confirmRemove && (
+        <div
+          className="fixed inset-0 flex items-center justify-center"
+          style={{ zIndex: 500, background: "rgba(0,0,0,.75)" }}
+        >
+          <div
+            className="w-full max-w-sm mx-4 rounded-3xl p-8 text-center"
+            style={{ background: "#0a1628", border: "1px solid #ff333333" }}
+          >
+            <p className="text-white font-semibold mb-2">Remove Friend?</p>
+            <p className="text-sm mb-6" style={{ color: "#ffffff60" }}>
+              Remove{" "}
+              <span style={{ color: "#ff9933" }}>{confirmRemove.name}</span>{" "}
+              from your friends?
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => {
+                  removeFriend(confirmRemove.uid);
+                  setConfirmRemove(null);
+                }}
+                className="rounded-xl px-5 py-2 text-sm font-semibold"
+                style={{
+                  background: "rgba(255,50,50,.15)",
+                  border: "1px solid #ff333366",
+                  color: "#ff6666",
+                }}
+              >
+                Remove
+              </button>
+              <button
+                onClick={() => setConfirmRemove(null)}
+                className="rounded-xl px-5 py-2 text-sm font-semibold"
+                style={{
+                  background: "rgba(255,255,255,.06)",
+                  border: "1px solid #ffffff22",
+                  color: "#ffffff80",
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Friends
         user={user}
         approved={approved}

@@ -65,7 +65,7 @@ export default function Navbar() {
           new Set([
             ...localFav,
             ...firebaseFav.filter((id) => localFav.includes(id)),
-          ])
+          ]),
         );
         localStorage.setItem("favorites", JSON.stringify(mergedFav));
         setFavoritesCount(mergedFav.length);
@@ -79,7 +79,7 @@ export default function Navbar() {
           new Set([
             ...localCart,
             ...firebaseCart.filter((id) => localCart.includes(id)),
-          ])
+          ]),
         );
         localStorage.setItem("cart", JSON.stringify(mergedCart));
         setCartCount(mergedCart.length);
@@ -113,7 +113,10 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links - Desktop */}
-          <ul className="hidden lg:flex space-x-6 font-poppins  font-bold text-gray-700 text-base lg:text-xl">
+          <ul
+            className="hidden lg:flex space-x-6 font-poppins 
+           font-bold text-gray-700 text-base lg:text-xl"
+          >
             {[
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
@@ -197,13 +200,6 @@ export default function Navbar() {
                     >
                       Login
                     </Link>
-                    <Link
-                      to="/signup"
-                      className="block px-4 py-2 text-darkBlue hover:bg-gray-100 hover:text-orange transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
                   </>
                 )}
 
@@ -277,13 +273,6 @@ export default function Navbar() {
                       onClick={() => setIsUserOpen(false)}
                     >
                       Login
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="block px-4 py-2 text-darkBlue hover:bg-gray-100 hover:text-orange transition-colors"
-                      onClick={() => setIsUserOpen(false)}
-                    >
-                      Sign Up
                     </Link>
                   </>
                 )}

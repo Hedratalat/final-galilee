@@ -93,9 +93,23 @@ export default function ApprovalGate({ user, onSignOut }) {
             Enter Your Code
           </h3>
 
-          <p className="text-white/50 text-sm mb-6 leading-relaxed max-w-xs mx-auto">
-            Enter the activation code that came with your purchase.
+          <p className="text-white/50 text-sm mb-3 leading-relaxed max-w-xs mx-auto">
+            To access the app, you need to purchase the product first — then
+            enter the activation code you received.
           </p>
+          <a
+            href="https://www.galilee-eg.com/products"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold mb-6 transition-all hover:scale-105"
+            style={{
+              background: "rgba(255,153,51,.15)",
+              border: "1px solid #ff993366",
+              color: "#ff9933",
+            }}
+          >
+            Buy the product
+          </a>
 
           {status === "success" ? (
             <div className="flex flex-col items-center gap-3">
