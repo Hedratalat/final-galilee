@@ -16,6 +16,7 @@ import PrayerReminder from "../components/PrayerReminder/PrayerReminder";
 import BlessingCelebration from "../components/BlessingCelebration/BlessingCelebration";
 import DailyVerse from "../components/DailyVerse/DailyVerse";
 import ApprovalGate from "../components/ApprovalGate/ApprovalGate";
+import Friends from "../components/Friends/Friends";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -346,6 +347,12 @@ export default function Streak() {
   const [toast, setToast] = useState({ msg: "", show: false });
   const [prayerLog, setPrayerLog] = useState([]);
   const [showBlessing, setShowBlessing] = useState(false);
+  const [friendsCtrl, setFriendsCtrl] = useState({
+    open: false,
+    setOpen: null,
+    requests: [],
+  });
+  const [friendsList, setFriendsList] = useState([]);
 
   /* auth listener */
   useEffect(() => {
@@ -561,7 +568,7 @@ export default function Streak() {
         <div className="flex-1" style={{ zIndex: 20 }}>
           <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
             {/* Header */}
-            <div className="text-center pb-8 pt-4">
+            <div className="text-center pb-8 pt-4 ">
               <div className="inline-block relative mb-4">
                 <div
                   className="anim-glow absolute rounded-full"
@@ -665,16 +672,43 @@ export default function Streak() {
                     <span className="text-sm font-medium text-white/80">
                       {user.displayName}
                     </span>
-                    <button
-                      onClick={handleSignOut}
-                      className="text-xs px-3 py-1 rounded-lg transition-all hover:scale-105"
-                      style={{
-                        color: "#ff9933",
-                        border: "1px solid #ff993344",
-                      }}
-                    >
-                      Sign out
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => friendsCtrl.setOpen?.(true)}
+                        className="text-xs px-3 py-1 rounded-lg transition-all hover:scale-105 relative"
+                        style={{
+                          color: "#ff9933",
+                          border: "1px solid #ff993344",
+                        }}
+                      >
+                        + Add Friend
+                        {friendsCtrl.requests?.length > 0 && (
+                          <span
+                            className="absolute -top-2 -right-2 flex items-center justify-center rounded-full text-white
+                             "
+                            style={{
+                              width: 18,
+                              height: 18,
+                              fontSize: 10,
+                              background: "#ff9933",
+                              border: "1.5px solid #0a1628",
+                            }}
+                          >
+                            {friendsCtrl.requests.length}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleSignOut}
+                        className="text-xs px-3 py-1 rounded-lg transition-all hover:scale-105"
+                        style={{
+                          color: "#ff9933",
+                          border: "1px solid #ff993344",
+                        }}
+                      >
+                        Sign out
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -1079,12 +1113,102 @@ export default function Streak() {
                     </div>
                   </div>
                 )}
+                {user && approved && friendsList.length > 0 && (
+                  <div
+                    className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                    style={{ background: "#003366" }}
+                  >
+                    <Orb
+                      cls="anim-orb-1"
+                      w={280}
+                      h={280}
+                      bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                      s={{ top: -80, left: -80 }}
+                    />
+                    <Orb
+                      cls="anim-orb-2"
+                      w={220}
+                      h={220}
+                      bg="radial-gradient(circle,#33669930,transparent 70%)"
+                      s={{ bottom: -60, right: -60 }}
+                    />
+                    <div className="relative" style={{ zIndex: 10 }}>
+                      <p
+                        className="text-xs uppercase mb-5 text-center"
+                        style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                      >
+                        👥 My Friends
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {friendsList.map((f, idx) => (
+                          <div
+                            key={f.uid}
+                            className="flex items-center justify-between rounded-2xl px-4 py-3"
+                            style={{
+                              background:
+                                idx === 0
+                                  ? "rgba(255,153,51,.08)"
+                                  : "rgba(255,255,255,.04)",
+                              border:
+                                idx === 0
+                                  ? "1px solid #ff993333"
+                                  : "1px solid #ffffff0a",
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="rounded-full flex items-center justify-center text-sm font-bold"
+                                style={{
+                                  width: 34,
+                                  height: 34,
+                                  background: "rgba(255,153,51,.2)",
+                                  color: "#ff9933",
+                                }}
+                              >
+                                {f.displayName[0]}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {f.displayName}
+                                </p>
+                                {idx === 0 && (
+                                  <p
+                                    className="text-xs"
+                                    style={{ color: "#ff9933" }}
+                                  >
+                                    🏆 Top Friend
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span
+                              className="text-sm font-bold rounded-full px-3 py-1"
+                              style={{
+                                background: "rgba(255,153,51,.12)",
+                                color: "#ff9933",
+                                border: "1px solid #ff993333",
+                              }}
+                            >
+                              🔥 {f.streak}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
         <div className="hidden lg:block w-40 shrink-0" style={{ zIndex: 10 }} />
       </div>
+      <Friends
+        user={user}
+        approved={approved}
+        onOpenChange={setFriendsCtrl}
+        onFriendsData={setFriendsList}
+      />
       <TopRanking currentUserId={user?.uid} />
 
       {/* Blessing Celebration */}
