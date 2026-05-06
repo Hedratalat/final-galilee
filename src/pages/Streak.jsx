@@ -737,7 +737,6 @@ export default function Streak() {
                     </div>
                   </div>
                 )}
-
                 {/* Streak Card */}
                 <div
                   className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
@@ -1015,6 +1014,108 @@ export default function Streak() {
                     </div>
                   </div>
                 </div>
+                {user && approved && friendsList.length > 0 && (
+                  <div
+                    className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
+                    style={{ background: "#003366" }}
+                  >
+                    <Orb
+                      cls="anim-orb-1"
+                      w={280}
+                      h={280}
+                      bg="radial-gradient(circle,#ff993330,transparent 70%)"
+                      s={{ top: -80, left: -80 }}
+                    />
+                    <Orb
+                      cls="anim-orb-2"
+                      w={220}
+                      h={220}
+                      bg="radial-gradient(circle,#33669930,transparent 70%)"
+                      s={{ bottom: -60, right: -60 }}
+                    />
+                    <div className="relative" style={{ zIndex: 10 }}>
+                      <p
+                        className="text-xs uppercase mb-5 text-center"
+                        style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
+                      >
+                        👥 My Friends
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {friendsList.map((f, idx) => (
+                          <div
+                            key={f.uid}
+                            className="flex items-center justify-between rounded-2xl px-4 py-3"
+                            style={{
+                              background:
+                                idx === 0
+                                  ? "rgba(255,153,51,.08)"
+                                  : "rgba(255,255,255,.04)",
+                              border:
+                                idx === 0
+                                  ? "1px solid #ff993333"
+                                  : "1px solid #ffffff0a",
+                            }}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="rounded-full flex items-center justify-center text-sm font-bold"
+                                style={{
+                                  width: 34,
+                                  height: 34,
+                                  background: "rgba(255,153,51,.2)",
+                                  color: "#ff9933",
+                                }}
+                              >
+                                {f.displayName[0]}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {f.displayName}
+                                </p>
+                                {idx === 0 && (
+                                  <p
+                                    className="text-xs"
+                                    style={{ color: "#ff9933" }}
+                                  >
+                                    🏆 Top Friend
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="text-sm font-bold rounded-full px-3 py-1"
+                                style={{
+                                  background: "rgba(255,153,51,.12)",
+                                  color: "#ff9933",
+                                  border: "1px solid #ff993333",
+                                }}
+                              >
+                                🔥 {f.streak}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  setConfirmRemove({
+                                    uid: f.uid,
+                                    name: f.displayName,
+                                  })
+                                }
+                                className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:scale-105"
+                                style={{
+                                  background: "rgba(255,50,50,.1)",
+                                  border: "1px solid #ff333344",
+                                  color: "#ff6666",
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}{" "}
                 {/* My Prayer Log */}
                 {user && prayerLog.length > 0 && (
                   <div
@@ -1132,108 +1233,6 @@ export default function Streak() {
                               >
                                 🔥 {entry.streak}
                               </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {user && approved && friendsList.length > 0 && (
-                  <div
-                    className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-                    style={{ background: "#003366" }}
-                  >
-                    <Orb
-                      cls="anim-orb-1"
-                      w={280}
-                      h={280}
-                      bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                      s={{ top: -80, left: -80 }}
-                    />
-                    <Orb
-                      cls="anim-orb-2"
-                      w={220}
-                      h={220}
-                      bg="radial-gradient(circle,#33669930,transparent 70%)"
-                      s={{ bottom: -60, right: -60 }}
-                    />
-                    <div className="relative" style={{ zIndex: 10 }}>
-                      <p
-                        className="text-xs uppercase mb-5 text-center"
-                        style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                      >
-                        👥 My Friends
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {friendsList.map((f, idx) => (
-                          <div
-                            key={f.uid}
-                            className="flex items-center justify-between rounded-2xl px-4 py-3"
-                            style={{
-                              background:
-                                idx === 0
-                                  ? "rgba(255,153,51,.08)"
-                                  : "rgba(255,255,255,.04)",
-                              border:
-                                idx === 0
-                                  ? "1px solid #ff993333"
-                                  : "1px solid #ffffff0a",
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="rounded-full flex items-center justify-center text-sm font-bold"
-                                style={{
-                                  width: 34,
-                                  height: 34,
-                                  background: "rgba(255,153,51,.2)",
-                                  color: "#ff9933",
-                                }}
-                              >
-                                {f.displayName[0]}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-white">
-                                  {f.displayName}
-                                </p>
-                                {idx === 0 && (
-                                  <p
-                                    className="text-xs"
-                                    style={{ color: "#ff9933" }}
-                                  >
-                                    🏆 Top Friend
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="text-sm font-bold rounded-full px-3 py-1"
-                                style={{
-                                  background: "rgba(255,153,51,.12)",
-                                  color: "#ff9933",
-                                  border: "1px solid #ff993333",
-                                }}
-                              >
-                                🔥 {f.streak}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  setConfirmRemove({
-                                    uid: f.uid,
-                                    name: f.displayName,
-                                  })
-                                }
-                                className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:scale-105"
-                                style={{
-                                  background: "rgba(255,50,50,.1)",
-                                  border: "1px solid #ff333344",
-                                  color: "#ff6666",
-                                }}
-                              >
-                                ✕
-                              </button>
                             </div>
                           </div>
                         ))}
