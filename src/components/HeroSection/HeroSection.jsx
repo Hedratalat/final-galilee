@@ -67,7 +67,7 @@ export default function HeroSection() {
       <div className="max-w-6xl  mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center w-full relative z-10 gap-6 sm:gap-8 lg:gap-12">
         {/* Text Section */}
         <div className="w-full lg:w-1/2 text-left flex flex-col justify-center items-center lg:items-start mt-4  lg:mt-6 sm:py-8 lg:py-0 ">
-          <h1 className="text-5xl pb-1 sm:text-5xl lg:text-6xl font-bold font-poppins bg-gradient-to-r from-darkBlue via-blue to-orange bg-clip-text text-transparent mb-4 leading-tight text-center lg:text-left">
+          <h1 className=" pb-1 sm:text-5xl lg:text-6xl font-bold font-poppins bg-gradient-to-r from-darkBlue via-blue to-orange bg-clip-text text-transparent mb-4 leading-tight text-center lg:text-left">
             The Place
             <br />
             <span className="text-5xl  lg:text-6xl lg:ml-2 font-bold">
