@@ -121,6 +121,7 @@ export default function Navbar() {
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
               { name: "Products", to: "/products" },
+              { name: "Streak", to: "/streak" },
               { name: "My Orders", to: "/myorders" },
               { name: "Contact", to: "/contact" },
             ].map((item) => (
@@ -304,6 +305,7 @@ export default function Navbar() {
               { name: "Home", to: "/" },
               { name: "About", to: "/about" },
               { name: "Products", to: "/products" },
+              { name: "Streak", to: "/streak" },
               { name: "My Orders", to: "/myorders" },
               { name: "Contact", to: "/contact" },
             ].map((item) => (
