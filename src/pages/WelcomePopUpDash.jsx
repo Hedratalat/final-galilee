@@ -14,12 +14,11 @@ import { Trash2, Edit2, X } from "lucide-react";
 export default function WelcomePopUpDash() {
   const [formData, setFormData] = useState({
     link: "",
+    imageUrl: "",
   });
-  const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [popups, setPopups] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
@@ -39,21 +38,9 @@ export default function WelcomePopUpDash() {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = async () => {
-    if (!imageFile && !editingId) {
-      return toast.error("Please select an image");
+    if (!formData.imageUrl) {
+      return toast.error("Please enter an image URL");
     }
 
     if (!formData.link) {
@@ -63,38 +50,14 @@ export default function WelcomePopUpDash() {
     setLoading(true);
 
     try {
-      let imageUrl = "";
-
-      if (imageFile) {
-        const imageData = new FormData();
-        imageData.append("file", imageFile);
-        imageData.append("upload_preset", "galilee_upload");
-        imageData.append("folder", "galilee_uploads/popups");
-
-        const imageRes = await fetch(
-          "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
-          {
-            method: "POST",
-            body: imageData,
-          }
-        );
-
-        const image = await imageRes.json();
-        imageUrl = image.secure_url;
-      }
-
       const popupData = {
         link: formData.link,
-        ...(imageUrl && { imageUrl }),
+        imageUrl: formData.imageUrl,
         updatedAt: new Date().toISOString(),
       };
 
       if (editingId) {
-        const existingPopup = popups.find((p) => p.id === editingId);
-        await setDoc(doc(db, "WelcomePopups", editingId), {
-          ...popupData,
-          imageUrl: imageUrl || existingPopup.imageUrl,
-        });
+        await setDoc(doc(db, "WelcomePopups", editingId), popupData);
         toast.success("Popup updated successfully");
       } else {
         await setDoc(doc(collection(db, "WelcomePopups")), {
@@ -104,9 +67,7 @@ export default function WelcomePopUpDash() {
         toast.success("Popup added successfully");
       }
 
-      setFormData({ link: "" });
-      setImageFile(null);
-      setImagePreview(null);
+      setFormData({ link: "", imageUrl: "" });
       setEditingId(null);
       fetchPopups();
     } catch (error) {
@@ -119,8 +80,7 @@ export default function WelcomePopUpDash() {
 
   const handleEdit = (popup) => {
     setEditingId(popup.id);
-    setFormData({ link: popup.link });
-    setImagePreview(popup.imageUrl);
+    setFormData({ link: popup.link, imageUrl: popup.imageUrl });
   };
 
   const handleDelete = async () => {
@@ -136,9 +96,7 @@ export default function WelcomePopUpDash() {
 
   const cancelEdit = () => {
     setEditingId(null);
-    setFormData({ link: "" });
-    setImageFile(null);
-    setImagePreview(null);
+    setFormData({ link: "", imageUrl: "" });
   };
 
   return (
@@ -153,33 +111,35 @@ export default function WelcomePopUpDash() {
       </motion.h2>
 
       <div className="flex flex-col gap-6 w-full mx-auto">
+        {/* Image URL Field */}
         <div className="flex flex-col">
-          <label className="text-darkBlue font-medium mb-2">Popup Image</label>
+          <label className="text-darkBlue font-medium mb-2">Image URL</label>
           <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="file-input w-full border border-gray-300 rounded-xl px-3 py-2 text-sm
-              file:mr-3 file:py-2 file:px-4 file:rounded-md 
-              file:border-0 file:text-white file:bg-orange 
-              file:hover:bg-blue file:cursor-pointer cursor-pointer"
+            type="url"
+            placeholder="https://example.com/image.jpg"
+            onChange={(e) =>
+              setFormData({ ...formData, imageUrl: e.target.value })
+            }
+            value={formData.imageUrl}
+            className="p-4 rounded-xl border border-gray-300 bg-white text-darkBlue placeholder-gray-500 focus:ring-2 focus:ring-blue focus:outline-none"
           />
-          {imagePreview && (
-            <div className="mt-4 relative">
+          {formData.imageUrl && (
+            <div className="mt-4">
               <img
-                src={imagePreview}
+                src={formData.imageUrl}
                 alt="Preview"
                 className="w-full max-w-md rounded-xl shadow-md"
+                onError={(e) => (e.target.style.display = "none")}
               />
             </div>
           )}
         </div>
 
+        {/* Link URL Field */}
         <div className="flex flex-col">
           <label className="text-darkBlue font-medium mb-2">Link URL</label>
           <input
             type="url"
-            name="link"
             placeholder="https://example.com/offer"
             onChange={(e) => setFormData({ ...formData, link: e.target.value })}
             value={formData.link}
@@ -267,7 +227,6 @@ export default function WelcomePopUpDash() {
         </div>
       )}
 
-      {/* Delete Confirmation Popup */}
       <AnimatePresence>
         {deleteConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
