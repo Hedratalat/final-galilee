@@ -53,7 +53,8 @@ const checkoutSchema = z
         },
         { message: "" },
       ),
-    vodafoneScreenshot: z.string().optional(),
+    senderPhone: z.string().optional(),
+    vodafoneReference: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -84,21 +85,24 @@ const checkoutSchema = z
   )
   .refine(
     (data) => {
-      if (data.paymentMethod !== "vodafone") {
-        return true;
-      }
-
-      const screenshot = data.vodafoneScreenshot?.trim() || "";
-
-      if (screenshot === "") {
-        return false;
-      }
-
-      return true;
+      if (data.paymentMethod !== "vodafone") return true;
+      const phone = data.senderPhone?.trim() || "";
+      return phone !== "" && /^01[0125][0-9]{8}$/.test(phone);
     },
     {
-      message: "Please upload transfer screenshot",
-      path: ["vodafoneScreenshot"],
+      message: "Please enter a valid Egyptian phone number",
+      path: ["senderPhone"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.paymentMethod !== "vodafone") return true;
+      const ref = data.vodafoneReference?.trim() || "";
+      return ref !== "" && /^\d{6,20}$/.test(ref);
+    },
+    {
+      message: "Please enter a valid reference number",
+      path: ["vodafoneReference"],
     },
   );
 
@@ -220,8 +224,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const total = getCartTotal();
   const [showModal, setShowModal] = useState(false);
-  const [uploadingVodafone, setUploadingVodafone] = useState(false);
-  const [vodafonePreview, setVodafonePreview] = useState(null);
+
   const {
     register,
     handleSubmit,
@@ -246,87 +249,47 @@ export default function Checkout() {
     });
   }, []);
 
-  // Upload Vodafone Screenshot to Cloudinary
-  const handleVodafoneUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
-      return;
-    }
-
-    setUploadingVodafone(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "galilee_upload");
-      formData.append("folder", "galilee_uploads");
-
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dbxclj6yt/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-
-      if (!res.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const data = await res.json();
-
-      setValue("vodafoneScreenshot", data.secure_url, {
-        shouldValidate: true,
-      });
-
-      setVodafonePreview(data.secure_url);
-
-      toast.success("Screenshot uploaded successfully");
-    } catch (error) {
-      console.error("Upload error");
-      toast.error("Failed to upload screenshot. Please try again.");
-    } finally {
-      setUploadingVodafone(false);
-    }
-  };
-
   const guestId = localStorage.getItem("guestId") || crypto.randomUUID();
   localStorage.setItem("guestId", guestId);
 
   const onSubmit = async (data) => {
     try {
       const cartItems = getCartData();
+
       let paymentMethodForDB = data.paymentMethod;
       if (data.paymentMethod === "vodafone") {
         paymentMethodForDB = "vodafone cash";
       }
-      const orderData = {
-        ...data,
-        paymentMethod: paymentMethodForDB,
-        vodafoneScreenshot: vodafonePreview,
-        items: cartItems,
 
+      const orderData = {
+        fullName: data.fullName,
+        phone: data.phone,
+        whatsapp: data.whatsapp,
+        city: data.city,
+        area: data.area,
+        address: data.address,
+        floor: data.floor || "",
+        paymentMethod: paymentMethodForDB,
+
+        ...(data.paymentMethod === "instapay" && {
+          referenceNumber: data.referenceNumber,
+        }),
+        ...(data.paymentMethod === "vodafone" && {
+          senderPhone: data.senderPhone,
+          vodafoneReference: data.vodafoneReference,
+        }),
+
+        items: cartItems,
         subtotal: total,
         shippingFee: shippingCost,
         grandTotal: grandTotal,
-
         status: "pending",
         createdAt: serverTimestamp(),
         orderNumber: `ORD-${Date.now()}`,
         guestId,
       };
 
-      const docRef = await addDoc(collection(db, "orders"), orderData);
-
-      console.log("Order saved");
+      await addDoc(collection(db, "orders"), orderData);
 
       localStorage.removeItem("cart");
       localStorage.removeItem("cartQuantities");
@@ -346,11 +309,10 @@ export default function Checkout() {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }, 1500);
     } catch (error) {
-      console.error("Error saving order");
-      toast.error("Failed to place order. Please try again.");
+      console.error("Error saving order:", error);
+      toast.error(error?.message || "Failed to place order. Please try again.");
     }
   };
-
   return (
     <>
       <Navbar />
@@ -668,82 +630,52 @@ export default function Checkout() {
                   </p>
                   <p className="text-sm font-semibold text-gray-800 flex items-start">
                     <span className="text-blue-600 mr-2">2.</span>
-                    Take a screenshot of the successful transfer
+                    After transfer, note your transaction reference number
                   </p>
                   <p className="text-sm font-semibold text-gray-800 flex items-start">
                     <span className="text-blue-600 mr-2">3.</span>
-                    Upload the screenshot below
+                    Enter your phone number and reference number below
                   </p>
                 </div>
 
-                {/* Screenshot Upload */}
+                {/* Sender Phone */}
                 <div>
                   <label className="block font-semibold text-blue-900 mb-2">
-                    Upload Transfer Screenshot *
+                    Sender Phone Number *
                   </label>
-
-                  <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center">
-                    {vodafonePreview ? (
-                      <div className="space-y-4">
-                        <img
-                          src={vodafonePreview}
-                          alt="Screenshot Preview"
-                          className="max-h-64 mx-auto rounded-lg shadow-md"
-                        />
-                        <div className="flex gap-3 justify-center">
-                          <span className="text-green-600 font-semibold">
-                            ✓ Screenshot uploaded
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setVodafonePreview(null);
-                              setValue("vodafoneScreenshot", "", {
-                                shouldValidate: true,
-                              });
-                            }}
-                            className="text-red-600 hover:text-red-700 font-semibold"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="text-5xl mb-3">📸</div>
-                        <p className="text-gray-600 mb-4">
-                          {uploadingVodafone
-                            ? "Uploading screenshot..."
-                            : "Click to upload transfer screenshot"}
-                        </p>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleVodafoneUpload}
-                          disabled={uploadingVodafone}
-                          className="hidden"
-                          id="vodafone-upload"
-                        />
-                        <label
-                          htmlFor="vodafone-upload"
-                          className={`inline-block bg-red-600 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer hover:bg-red-700 transition-colors ${
-                            uploadingVodafone
-                              ? "opacity-50 cursor-not-allowed"
-                              : ""
-                          }`}
-                        >
-                          {uploadingVodafone ? "Uploading..." : "Choose File"}
-                        </label>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Supported: JPG, PNG (Max 5MB)
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {errors.vodafoneScreenshot && (
+                  <input
+                    {...register("senderPhone")}
+                    placeholder="01XXXXXXXXX"
+                    className={`w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ${
+                      errors.senderPhone
+                        ? "border-red-400 focus:ring-red-300"
+                        : "focus:ring-blue-500"
+                    }`}
+                  />
+                  {errors.senderPhone && (
                     <p className="text-red-500 text-sm mt-2 ml-1">
-                      {errors.vodafoneScreenshot.message}
+                      {errors.senderPhone.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Reference Number */}
+                <div className="mt-4">
+                  <label className="block font-semibold text-blue-900 mb-2">
+                    Transaction Reference Number *
+                  </label>
+                  <input
+                    {...register("vodafoneReference")}
+                    placeholder="Enter transaction reference number"
+                    className={`w-full border-2 border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 ${
+                      errors.vodafoneReference
+                        ? "border-red-400 focus:ring-red-300"
+                        : "focus:ring-blue-500"
+                    }`}
+                  />
+                  {errors.vodafoneReference && (
+                    <p className="text-red-500 text-sm mt-2 ml-1">
+                      {errors.vodafoneReference.message}
                     </p>
                   )}
                 </div>

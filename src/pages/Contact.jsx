@@ -23,11 +23,14 @@ const contactSchema = z.object({
       (val) => {
         const lowerVal = val.toLowerCase();
         return /^[a-zA-Z][a-zA-Z0-9._%+-]*@gmail\.(com|net|org)(\.eg)?$/.test(
-          lowerVal
+          lowerVal,
         );
       },
-      { message: "Email must be a valid Gmail address" }
+      { message: "Email must be a valid Gmail address" },
     ),
+  phone: z
+    .string()
+    .regex(/^(\+2)?01[0125][0-9]{8}$/, "Phone must be a valid Egyptian number"),
   message: z
     .string()
     .min(10, "Message must be at least 10 characters")
@@ -38,6 +41,7 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
     message: "",
   });
   const [errors, setErrors] = useState({});
@@ -92,6 +96,7 @@ export default function Contact() {
       setFormData({
         fullName: "",
         email: "",
+        phone: "",
         message: "",
       });
     } catch (err) {
@@ -185,6 +190,29 @@ export default function Contact() {
                 {errors.email && (
                   <p className="text-red-600 text-sm mt-2 font-poppins font-medium">
                     {errors.email}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-poppins font-semibold mb-2">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  className={`w-full p-3 sm:p-4 rounded-2xl border ${
+                    errors.phone
+                      ? "border-red-500 ring-2 ring-red-200"
+                      : "border-gray-300"
+                  } focus:outline-none focus:ring-2 focus:ring-blue focus:border-blue transition-all duration-300`}
+                  placeholder="01XXXXXXXXX"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+                {errors.phone && (
+                  <p className="text-red-600 text-sm mt-2 font-poppins font-medium">
+                    {errors.phone}
                   </p>
                 )}
               </div>

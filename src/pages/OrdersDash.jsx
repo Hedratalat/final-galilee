@@ -31,11 +31,9 @@ export default function OrdersDash() {
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("success"); // success or error
 
-  // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
 
-  // جلب الأوردرات من Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
@@ -54,6 +52,49 @@ export default function OrdersDash() {
     setPopupType(type);
     setShowPopup(true);
     setTimeout(() => setShowPopup(false), 3000);
+  };
+
+  // Confirm order via WhatsApp
+  const handleConfirmOrder = (order) => {
+    const phone = order.whatsapp || order.phone;
+    const cleanPhone = phone?.replace(/\D/g, "");
+    const waPhone = cleanPhone?.startsWith("20")
+      ? cleanPhone
+      : cleanPhone?.startsWith("0")
+        ? "2" + cleanPhone
+        : "2" + cleanPhone;
+
+    const itemsList = order.items
+      ?.map(
+        (item) =>
+          `  - ${item.productName} (${item.quantity} x ${item.price} EGP = ${item.total} EGP)`,
+      )
+      .join("\n");
+
+    const message = `تم تأكيد طلبك
+
+مرحباً ${order.fullName} 
+
+ تفاصيل الطلب:
+
+ المنتجات:
+${itemsList}
+
+ تفاصيل الدفع:
+المجموع: ${order.subtotal} EGP
+رسوم الشحن: ${order.shippingFee} EGP
+الإجمالي: ${order.grandTotal} EGP
+طريقة الدفع: ${order.paymentMethod}${order.referenceNumber ? `\nرقم المرجع: ${order.referenceNumber}` : ""}
+
+ عنوان التوصيل:
+${order.address}
+المنطقة: ${order.area}
+المدينة: ${order.city}${order.floor ? `\nالدور: ${order.floor}` : ""}
+
+متشكرينك من قلبنا.. وفي انتظار طلبك الجاي`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${waPhone}?text=${encodedMessage}`, "_blank");
   };
 
   // تغيير حالة الأوردر
@@ -126,7 +167,7 @@ export default function OrdersDash() {
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(
     indexOfFirstOrder,
-    indexOfLastOrder
+    indexOfLastOrder,
   );
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
 
@@ -219,8 +260,8 @@ export default function OrdersDash() {
                   order.status === "pending"
                     ? "bg-orange"
                     : order.status === "processing"
-                    ? "bg-blue"
-                    : "bg-green-500"
+                      ? "bg-blue"
+                      : "bg-green-500"
                 }`}
               >
                 {order.status}
@@ -317,7 +358,7 @@ export default function OrdersDash() {
               </p>
             )}
 
-            {/* Change Status & Delete */}
+            {/* Change Status & Delete & Confirm */}
             <div className="flex gap-3 mt-4 flex-wrap items-center">
               {["pending", "processing", "completed"].map((status) => (
                 <button
@@ -332,6 +373,22 @@ export default function OrdersDash() {
                   {status}
                 </button>
               ))}
+
+              {/* Confirm Order - WhatsApp */}
+              <button
+                onClick={() => handleConfirmOrder(order)}
+                className="px-4 py-2 rounded-xl font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors flex items-center gap-2"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-5 h-5"
+                  viewBox="0 0 32 32"
+                  fill="currentColor"
+                >
+                  <path d="M16 0C7.163 0 0 7.163 0 16c0 2.833.738 5.486 2.031 7.788L0 32l8.418-2.007A15.937 15.937 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.76-1.845l-.485-.288-5.002 1.193 1.215-4.874-.317-.5A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.862c-.398-.2-2.352-1.16-2.717-1.292-.364-.133-.63-.2-.895.2-.265.398-1.028 1.292-1.26 1.558-.232.265-.464.298-.862.1-.398-.2-1.682-.62-3.204-1.977-1.184-1.057-1.983-2.362-2.215-2.76-.232-.398-.025-.613.174-.811.179-.178.398-.464.597-.696.2-.232.265-.398.398-.663.133-.265.066-.497-.033-.696-.1-.2-.895-2.157-1.226-2.953-.323-.775-.651-.67-.895-.683-.232-.012-.497-.015-.762-.015-.265 0-.696.1-1.061.497-.364.398-1.393 1.36-1.393 3.316s1.426 3.847 1.625 4.113c.2.265 2.807 4.286 6.802 6.013.951.41 1.693.655 2.271.839.954.304 1.823.261 2.51.158.765-.114 2.352-.961 2.684-1.89.332-.929.332-1.725.232-1.89-.1-.165-.364-.265-.762-.464z" />
+                </svg>
+                Confirm Order
+              </button>
 
               {/* Delete Button */}
               <button

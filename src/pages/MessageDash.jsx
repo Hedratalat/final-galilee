@@ -63,6 +63,9 @@ export default function MessageDash() {
               <p className="text-gray-900 text-sm border-b border-gray-300 mt-1 ">
                 {msg.email}
               </p>
+              {msg.phone && (
+                <p className="text-gray-900 text-sm mt-2 ">📞 {msg.phone}</p>
+              )}
               <p className="text-gray-700 mt-4">{msg.message}</p>
 
               {msg.createdAt?.seconds && (

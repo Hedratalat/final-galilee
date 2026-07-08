@@ -42,6 +42,7 @@ const ButtonScroll = lazy(
   () => import("./components/ButtonScroll/ButtonScroll"),
 );
 const Streak = lazy(() => import("./pages/Streak"));
+const StreakBible = lazy(() => import("./pages/StreakBible"));
 const LoginTest = lazy(() => import("./pages/LoginTest"));
 // Spinner component
 const LoadingSpinner = () => (
@@ -85,6 +86,7 @@ function AppContent() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/streak" element={<Streak />} />
+          <Route path="/streakbible" element={<StreakBible />} />
           <Route path="/login-test" element={<LoginTest />} />
           {/* //dashboard */}
           <Route

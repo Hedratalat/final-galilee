@@ -23,7 +23,7 @@ export default function ApprovalGate({ user, onSignOut }) {
   const [error, setError] = useState("");
 
   const handleActivate = async () => {
-    const trimmed = code.trim();
+    const trimmed = code.trim().toUpperCase();
     if (!trimmed) return;
 
     if (!VALID_CODES.includes(trimmed)) {

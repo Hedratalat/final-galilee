@@ -17,6 +17,7 @@ import BlessingCelebration from "../components/BlessingCelebration/BlessingCeleb
 import DailyVerse from "../components/DailyVerse/DailyVerse";
 import ApprovalGate from "../components/ApprovalGate/ApprovalGate";
 import Friends from "../components/Friends/Friends";
+import MilestoneReward from "../components/Milestonereward/Milestonereward";
 
 /* ─────────────────────────────── constants ─────────────────────────────── */
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -29,7 +30,7 @@ const DAY_NAMES = [
   "Friday",
   "Saturday",
 ];
-const MILESTONES = [3, 7, 14, 30, 40, 100];
+const MILESTONES = [10, 50, 80, 120, 200, 250];
 const COLORS = [
   { r: 255, g: 153, b: 51 },
   { r: 51, g: 102, b: 153 },
@@ -360,8 +361,10 @@ export default function Streak() {
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       setAuthLoading(false);
-      if (u) await loadUserData(u);
-      else resetState();
+      if (u) {
+        await ensureUserDoc(u);
+        await loadUserData(u);
+      } else resetState();
     });
     return unsub;
   }, []);
@@ -372,6 +375,18 @@ export default function Streak() {
     setWeekHistory(Array(7).fill(false));
     setPrayerLog([]);
     setApproved(false);
+  }
+
+  async function ensureUserDoc(u) {
+    await setDoc(
+      doc(db, "users", u.uid),
+      {
+        displayName: u.displayName || "Anonymous",
+        email: u.email || "",
+        photoURL: u.photoURL || "",
+      },
+      { merge: true },
+    );
   }
 
   function buildPrayerLog(prayers = {}) {
@@ -963,57 +978,8 @@ export default function Streak() {
                 <PrayerReminder user={user} todayDone={todayDone} />
                 <DailyVerse />
                 {/* Milestones */}
-                <div
-                  className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
-                  style={{ background: "#003366" }}
-                >
-                  <Orb
-                    cls="anim-orb-1"
-                    w={280}
-                    h={280}
-                    bg="radial-gradient(circle,#ff993330,transparent 70%)"
-                    s={{ top: -80, left: -80 }}
-                  />
-                  <Orb
-                    cls="anim-orb-2"
-                    w={220}
-                    h={220}
-                    bg="radial-gradient(circle,#33669930,transparent 70%)"
-                    s={{ bottom: -60, right: -60 }}
-                  />
-                  <div className="relative text-center" style={{ zIndex: 10 }}>
-                    <p
-                      className="text-xs uppercase mb-5"
-                      style={{ color: "#ffffff70", letterSpacing: "0.3em" }}
-                    >
-                      Milestones
-                    </p>
-                    <div className="flex gap-3 justify-center flex-wrap">
-                      {MILESTONES.map((m) => {
-                        const reached = streak >= m;
-                        return (
-                          <div
-                            key={m}
-                            className="flex items-center gap-1 rounded-xl px-4 py-2 text-sm transition-all duration-300"
-                            style={{
-                              border: `1px solid ${reached ? "#ff993355" : "#33669944"}`,
-                              color: reached ? "#ff9933" : "#ffffff70",
-                              background: reached
-                                ? "rgba(255,153,51,.1)"
-                                : "rgba(255,255,255,.04)",
-                              boxShadow: reached
-                                ? "0 0 14px #ff993322"
-                                : "none",
-                              fontSize: "clamp(.7rem,1.3vw,.9rem)",
-                            }}
-                          >
-                            {reached ? "🏆" : "🔒"} {m} days
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
+                <MilestoneReward streak={streak} />
+
                 {user && approved && friendsList.length > 0 && (
                   <div
                     className="rounded-3xl p-8 sm:p-10 mb-5 relative overflow-hidden"
@@ -1041,81 +1007,141 @@ export default function Streak() {
                         👥 My Friends
                       </p>
                       <div className="flex flex-col gap-2">
-                        {friendsList.map((f, idx) => (
-                          <div
-                            key={f.uid}
-                            className="flex items-center justify-between rounded-2xl px-4 py-3"
-                            style={{
-                              background:
-                                idx === 0
-                                  ? "rgba(255,153,51,.08)"
-                                  : "rgba(255,255,255,.04)",
-                              border:
-                                idx === 0
-                                  ? "1px solid #ff993333"
-                                  : "1px solid #ffffff0a",
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="rounded-full flex items-center justify-center text-sm font-bold"
-                                style={{
-                                  width: 34,
-                                  height: 34,
-                                  background: "rgba(255,153,51,.2)",
-                                  color: "#ff9933",
-                                }}
-                              >
-                                {f.displayName[0]}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-white">
-                                  {f.displayName}
-                                </p>
-                                {idx === 0 && (
-                                  <p
-                                    className="text-xs"
-                                    style={{ color: "#ff9933" }}
-                                  >
-                                    🏆 Top Friend
+                        {[
+                          {
+                            uid: user.uid,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                            streak,
+                            isMe: true,
+                          },
+                          ...friendsList,
+                        ]
+                          .sort((a, b) => b.streak - a.streak)
+                          .map((f, idx) => (
+                            <div
+                              key={f.uid}
+                              className="flex items-center justify-between rounded-2xl px-4 py-3"
+                              style={{
+                                background:
+                                  idx === 0
+                                    ? "rgba(255,153,51,.08)"
+                                    : "rgba(255,255,255,.04)",
+                                border:
+                                  idx === 0
+                                    ? "1px solid #ff993333"
+                                    : "1px solid #ffffff0a",
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="rounded-full flex items-center justify-center text-xs font-bold"
+                                  style={{
+                                    width: 34,
+                                    height: 34,
+                                    flexShrink: 0,
+                                    background:
+                                      idx === 0
+                                        ? "rgba(255,215,0,.25)"
+                                        : idx === 1
+                                          ? "rgba(192,192,192,.2)"
+                                          : idx === 2
+                                            ? "rgba(205,127,50,.2)"
+                                            : "rgba(255,153,51,.1)",
+                                    color:
+                                      idx === 0
+                                        ? "#ffd700"
+                                        : idx === 1
+                                          ? "#c0c0c0"
+                                          : idx === 2
+                                            ? "#cd7f32"
+                                            : "#ff9933",
+                                    border:
+                                      idx === 0
+                                        ? "1px solid #ffd70066"
+                                        : idx === 1
+                                          ? "1px solid #c0c0c066"
+                                          : idx === 2
+                                            ? "1px solid #cd7f3266"
+                                            : "1px solid #ff993344",
+                                    boxShadow:
+                                      idx === 0
+                                        ? "0 0 10px #ffd70033"
+                                        : idx === 1
+                                          ? "0 0 10px #c0c0c033"
+                                          : idx === 2
+                                            ? "0 0 10px #cd7f3233"
+                                            : "none",
+                                  }}
+                                >
+                                  {idx === 0
+                                    ? "🥇"
+                                    : idx === 1
+                                      ? "🥈"
+                                      : idx === 2
+                                        ? "🥉"
+                                        : `${idx + 1}`}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-white">
+                                    {f.displayName}
+                                    {f.isMe && (
+                                      <span
+                                        className="ml-2 text-xs"
+                                        style={{ color: "#ffffff50" }}
+                                      >
+                                        (You)
+                                      </span>
+                                    )}
                                   </p>
+                                  {idx === 0 && (
+                                    <p
+                                      className="text-xs"
+                                      style={{ color: "#ff9933" }}
+                                    >
+                                      🏆 Top
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-sm font-bold rounded-full px-3 py-1"
+                                  style={{
+                                    background: "rgba(255,153,51,.12)",
+                                    color: "#ff9933",
+                                    border: "1px solid #ff993333",
+                                  }}
+                                >
+                                  🔥 {f.streak}
+                                </span>
+                                {!f.isMe ? (
+                                  <button
+                                    onClick={() =>
+                                      setConfirmRemove({
+                                        uid: f.uid,
+                                        name: f.displayName,
+                                      })
+                                    }
+                                    className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:scale-105"
+                                    style={{
+                                      background: "rgba(255,50,50,.1)",
+                                      border: "1px solid #ff333344",
+                                      color: "#ff6666",
+                                    }}
+                                  >
+                                    ✕
+                                  </button>
+                                ) : (
+                                  <div style={{ width: 37 }} />
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="text-sm font-bold rounded-full px-3 py-1"
-                                style={{
-                                  background: "rgba(255,153,51,.12)",
-                                  color: "#ff9933",
-                                  border: "1px solid #ff993333",
-                                }}
-                              >
-                                🔥 {f.streak}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  setConfirmRemove({
-                                    uid: f.uid,
-                                    name: f.displayName,
-                                  })
-                                }
-                                className="rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:scale-105"
-                                style={{
-                                  background: "rgba(255,50,50,.1)",
-                                  border: "1px solid #ff333344",
-                                  color: "#ff6666",
-                                }}
-                              >
-                                ✕
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   </div>
-                )}{" "}
+                )}
                 {/* My Prayer Log */}
                 {user && prayerLog.length > 0 && (
                   <div
@@ -1144,98 +1170,106 @@ export default function Streak() {
                         📖 My Prayer Log
                       </p>
                       <div className="flex flex-col gap-2">
-                        {prayerLog.map((entry, idx) => (
-                          <div
-                            key={entry.date}
-                            className="log-row flex items-center justify-between rounded-2xl px-4 py-3"
-                            style={{
-                              background:
-                                entry.date === todayStr()
-                                  ? "rgba(255,153,51,.08)"
-                                  : "rgba(255,255,255,.04)",
-                              border:
-                                entry.date === todayStr()
-                                  ? "1px solid #ff993333"
-                                  : "1px solid #ffffff0a",
-                              animationDelay: `${idx * 0.04}s`,
-                            }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className="relative shrink-0"
-                                style={{ width: 18, height: 18 }}
-                              >
+                        {prayerLog
+                          .filter((entry) => {
+                            const tenDaysAgo = new Date(egyptNow());
+                            tenDaysAgo.setDate(tenDaysAgo.getDate() - 9);
+                            return (
+                              new Date(entry.date + "T00:00:00") >= tenDaysAgo
+                            );
+                          })
+                          .map((entry, idx) => (
+                            <div
+                              key={entry.date}
+                              className="log-row flex items-center justify-between rounded-2xl px-4 py-3"
+                              style={{
+                                background:
+                                  entry.date === todayStr()
+                                    ? "rgba(255,153,51,.08)"
+                                    : "rgba(255,255,255,.04)",
+                                border:
+                                  entry.date === todayStr()
+                                    ? "1px solid #ff993333"
+                                    : "1px solid #ffffff0a",
+                                animationDelay: `${idx * 0.04}s`,
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
                                 <div
-                                  style={{
-                                    position: "absolute",
-                                    left: "50%",
-                                    top: "5%",
-                                    transform: "translateX(-50%)",
-                                    width: 3,
-                                    height: "90%",
-                                    background: "#ff9933",
-                                    borderRadius: 2,
-                                  }}
-                                />
-                                <div
-                                  style={{
-                                    position: "absolute",
-                                    top: "28%",
-                                    left: "5%",
-                                    width: "90%",
-                                    height: 3,
-                                    background: "#ff9933",
-                                    borderRadius: 2,
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-white">
-                                  {entry.dayOfWeek}
-                                  {entry.date === todayStr() && (
-                                    <span
-                                      className="ml-2 text-xs"
-                                      style={{ color: "#ff9933" }}
-                                    >
-                                      • Today
-                                    </span>
-                                  )}
-                                </p>
-                                <p
-                                  className="text-xs"
-                                  style={{ color: "#ffffff50" }}
+                                  className="relative shrink-0"
+                                  style={{ width: 18, height: 18 }}
                                 >
-                                  {entry.date}
-                                </p>
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      left: "50%",
+                                      top: "5%",
+                                      transform: "translateX(-50%)",
+                                      width: 3,
+                                      height: "90%",
+                                      background: "#ff9933",
+                                      borderRadius: 2,
+                                    }}
+                                  />
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      top: "28%",
+                                      left: "5%",
+                                      width: "90%",
+                                      height: 3,
+                                      background: "#ff9933",
+                                      borderRadius: 2,
+                                    }}
+                                  />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-white">
+                                    {entry.dayOfWeek}
+                                    {entry.date === todayStr() && (
+                                      <span
+                                        className="ml-2 text-xs"
+                                        style={{ color: "#ff9933" }}
+                                      >
+                                        • Today
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p
+                                    className="text-xs"
+                                    style={{ color: "#ffffff50" }}
+                                  >
+                                    {entry.date}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span
+                                  className="text-xs"
+                                  style={{ color: "#ffffff60" }}
+                                >
+                                  {entry.time?.toDate
+                                    ? entry.time
+                                        .toDate()
+                                        .toLocaleTimeString("en-US", {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                        })
+                                    : "—"}
+                                </span>
+                                <span
+                                  className="text-xs rounded-full px-3 py-1 font-semibold"
+                                  style={{
+                                    background: "rgba(255,153,51,.12)",
+                                    color: "#ff9933",
+                                    border: "1px solid #ff993333",
+                                  }}
+                                >
+                                  🔥 {entry.streak}
+                                </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span
-                                className="text-xs"
-                                style={{ color: "#ffffff60" }}
-                              >
-                                {entry.time?.toDate
-                                  ? entry.time
-                                      .toDate()
-                                      .toLocaleTimeString("en-US", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                  : "—"}
-                              </span>
-                              <span
-                                className="text-xs rounded-full px-3 py-1 font-semibold"
-                                style={{
-                                  background: "rgba(255,153,51,.12)",
-                                  color: "#ff9933",
-                                  border: "1px solid #ff993333",
-                                }}
-                              >
-                                🔥 {entry.streak}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   </div>

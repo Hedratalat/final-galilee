@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AiOutlineHeart, AiFillHeart, AiOutlineClose } from "react-icons/ai";
-import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "../firebase";
 import Navbar from "../components/Navbar/Navbar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -117,6 +124,7 @@ function FiltersContent({
 
 export default function Products() {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [priceFilter, setPriceFilter] = useState({ min: 0, max: 10000 });
@@ -138,28 +146,38 @@ export default function Products() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
+  // ── getDocs بدل onSnapshot ──
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "Products"), (snap) => {
-      const cats = [];
-      const data = snap.docs.map((doc) => {
-        const d = doc.data();
-        if (d.category) cats.push(d.category);
-        return {
-          id: doc.id,
-          name: d.name,
-          image: d.imageCard || d.imageUrl,
-          price: d.discountPrice ? d.discountPrice : d.price,
-          realPrice: d.price,
-          category: d.category,
-          details: d.description,
-          order: d.order || null,
-          outOfStock: d.outOfStock || false,
-        };
-      });
-      setProducts(data);
-      setCategories([...new Set(cats)]);
-    });
-    return () => unsubscribe();
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const snap = await getDocs(collection(db, "Products"));
+        const cats = [];
+        const data = snap.docs.map((doc) => {
+          const d = doc.data();
+          if (d.category) cats.push(d.category);
+          return {
+            id: doc.id,
+            name: d.name,
+            image: d.imageCard || d.imageUrl,
+            price: d.discountPrice ? d.discountPrice : d.price,
+            realPrice: d.price,
+            category: d.category,
+            details: d.description,
+            order: d.order || null,
+            outOfStock: d.outOfStock || false,
+          };
+        });
+        setProducts(data);
+        setCategories([...new Set(cats)]);
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -179,7 +197,6 @@ export default function Products() {
       if (!docSnap.exists()) return;
       const firebaseFav = docSnap.data().favorites || [];
       const localFav = JSON.parse(localStorage.getItem("favorites")) || [];
-      // localStorage هو المصدر الأساسي بعد login
       const mergedFav = Array.from(
         new Set([
           ...localFav,
@@ -203,7 +220,6 @@ export default function Products() {
       if (!docSnap.exists()) return;
       const firebaseCart = docSnap.data().cart || [];
       const localCart = JSON.parse(localStorage.getItem("cart")) || [];
-      // استخدم localStorage هو المصدر الأساسي
       const mergedCart = Array.from(
         new Set([
           ...localCart,
@@ -227,21 +243,17 @@ export default function Products() {
     const favIds = Object.keys(updatedFavorites).filter(
       (key) => updatedFavorites[key],
     );
-    // حفظ localStorage
     localStorage.setItem("favorites", JSON.stringify(favIds));
     window.dispatchEvent(new Event("favoritesUpdated"));
-    // حفظ Firebase لو مسجّل دخول
     if (user) {
       const userFavRef = doc(db, "Users", user.uid);
       updateDoc(userFavRef, { favorites: favIds }).catch(() => {});
     }
-    // toast مباشر للمستخدم
     if (updatedFavorites[id]) toast.success(`Added ${name} to favorites`);
     else
       toast(`Removed ${name} from favorites`, {
         icon: <AiOutlineClose color="red" size={20} />,
       });
-    // تحديث state محلي فقط
     setFavorites(updatedFavorites);
   };
 
@@ -305,14 +317,13 @@ export default function Products() {
   }, [search, categoryFilter, priceFilter]);
 
   const sortedProducts = filteredProducts.sort((a, b) => {
-    // المنتجات اللي عندها order تظهر الأول
     if (a.order !== null && b.order === null) return -1;
     if (a.order === null && b.order !== null) return 1;
     if (a.order !== null && b.order !== null) return a.order - b.order;
     return 0;
   });
 
-  const productsPerPage = 6;
+  const productsPerPage = 9;
   const totalPages = Math.ceil(sortedProducts.length / productsPerPage);
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   const endIndex = currentPage * productsPerPage;
@@ -348,275 +359,274 @@ export default function Products() {
             All Products in One Place
           </motion.h2>
 
-          {/* Mobile filter button */}
-          <div className="flex justify-end mb-4 xl:hidden">
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="flex items-center gap-2 bg-white border border-gray-300 text-darkBlue text-sm font-medium px-4 py-2.5 rounded-xl shadow"
-            >
-              <svg
-                viewBox="0 0 20 20"
-                width="15"
-                height="15"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-              >
-                <path d="M3 5h14M6 10h8M9 15h2" strokeLinecap="round" />
-              </svg>
-              Filters
-              {isFiltered && <span className="w-2 h-2 rounded-full bg-blue" />}
-            </button>
-          </div>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-32">
+              <div className="w-10 h-10 border-4 border-darkBlue border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
 
-          {/* Layout */}
-          <div className="flex gap-8 items-start">
-            {/* ── Desktop Sidebar ── */}
-            <aside className="hidden xl:block w-60 shrink-0 bg-white rounded-2xl border border-gray-200 p-6 sticky top-6 shadow -ml-16">
-              <FiltersContent {...filtersProps} />
-            </aside>
-
-            {/* ── Products + Pagination ── */}
-            <div className="flex-1 min-w-0">
-              {/* Products Grid with Container Animation */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-                className="grid gap-7 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {currentProducts.length === 0 ? (
-                  <motion.div
-                    className="col-span-full flex flex-col items-center justify-center py-20"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 1.5,
-                      ease: "easeInOut",
-                    }}
+          {!loading && (
+            <>
+              {/* Mobile filter button */}
+              <div className="flex justify-end mb-4 xl:hidden">
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  className="flex items-center gap-2 bg-white border border-gray-300 text-darkBlue text-sm font-medium px-4 py-2.5 rounded-xl shadow"
+                >
+                  <svg
+                    viewBox="0 0 20 20"
+                    width="15"
+                    height="15"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-24 w-24 text-gray-300 mb-6 animate-bounce"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-8 8-8-8"
-                      />
-                    </svg>
-                    <h3 className="text-2xl font-semibold text-gray-500 mb-2">
-                      No Products Available
-                    </h3>
-                    <p className="text-gray-400 text-center max-w-xs">
-                      Try changing the search or filters to see more products.
-                    </p>
-                    <button
-                      onClick={resetFilters}
-                      className="mt-4 px-6 py-2.5 bg-darkBlue text-white rounded-xl text-sm font-medium"
-                    >
-                      Reset Filters
-                    </button>
-                  </motion.div>
-                ) : (
-                  currentProducts.map((product, index) => (
-                    <Link
-                      key={product.id}
-                      to={`/products/${product.id}`}
-                      className="block cursor-pointer"
-                    >
-                      <motion.div
-                        key={product.id}
-                        initial={{ opacity: 0, y: 50 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{
-                          delay:
-                            index * (window.innerWidth >= 1024 ? 0.05 : 0.1),
-                          duration: 0.6,
-                          ease: "easeOut",
-                        }}
-                        viewport={{ once: true }}
-                        style={{ willChange: "transform, opacity" }}
-                        className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 mb-4"
-                      >
-                        <div className="relative overflow-hidden rounded-t-3xl">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className={`w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 ${
-                              product.outOfStock ? "opacity-60 grayscale" : ""
-                            }`}
-                          />
+                    <path d="M3 5h14M6 10h8M9 15h2" strokeLinecap="round" />
+                  </svg>
+                  Filters
+                  {isFiltered && (
+                    <span className="w-2 h-2 rounded-full bg-blue" />
+                  )}
+                </button>
+              </div>
 
-                          {/* Out of Stock Badge */}
-                          {product.outOfStock && (
-                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-                              <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
-                                OUT OF STOCK
+              {/* Layout */}
+              <div className="flex gap-8 items-start">
+                {/* ── Desktop Sidebar ── */}
+                <aside className="hidden xl:block w-60 shrink-0 bg-white rounded-2xl border border-gray-200 p-6 sticky top-6 shadow -ml-16">
+                  <FiltersContent {...filtersProps} />
+                </aside>
+
+                {/* ── Products + Pagination ── */}
+                <div className="flex-1 min-w-0">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    viewport={{ once: true }}
+                    className="grid gap-7 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                  >
+                    {currentProducts.length === 0 ? (
+                      <motion.div
+                        className="col-span-full flex flex-col items-center justify-center py-20"
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1.5,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-24 w-24 text-gray-300 mb-6 animate-bounce"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M20 13V7a2 2 0 00-2-2H6a2 2 0 00-2 2v6m16 0l-8 8-8-8"
+                          />
+                        </svg>
+                        <h3 className="text-2xl font-semibold text-gray-500 mb-2">
+                          No Products Available
+                        </h3>
+                        <p className="text-gray-400 text-center max-w-xs">
+                          Try changing the search or filters to see more
+                          products.
+                        </p>
+                        <button
+                          onClick={resetFilters}
+                          className="mt-4 px-6 py-2.5 bg-darkBlue text-white rounded-xl text-sm font-medium"
+                        >
+                          Reset Filters
+                        </button>
+                      </motion.div>
+                    ) : (
+                      currentProducts.map((product, index) => (
+                        <Link
+                          key={product.id}
+                          to={`/products/${product.id}`}
+                          className="block cursor-pointer"
+                        >
+                          <motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{
+                              delay:
+                                index *
+                                (window.innerWidth >= 1024 ? 0.05 : 0.1),
+                              duration: 0.6,
+                              ease: "easeOut",
+                            }}
+                            viewport={{ once: true }}
+                            style={{ willChange: "transform, opacity" }}
+                            className="group relative bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 mb-4"
+                          >
+                            <div className="relative overflow-hidden rounded-t-3xl">
+                              <img
+                                src={product.image}
+                                alt={product.name}
+                                loading="lazy"
+                                className={`w-full h-64 object-cover transform hover:scale-105 transition-transform duration-500 ${
+                                  product.outOfStock
+                                    ? "opacity-60 grayscale"
+                                    : ""
+                                }`}
+                              />
+
+                              {/* Out of Stock Badge */}
+                              {product.outOfStock && (
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+                                  <div className="bg-red-600 text-white px-6 py-3 rounded-full font-bold text-lg shadow-lg transform rotate-[-15deg]">
+                                    OUT OF STOCK
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300 z-0">
+                                <span className="bg-white text-darkBlue px-6 py-3 rounded-full shadow text-sm">
+                                  View Details
+                                </span>
+                              </div>
+
+                              <button
+                                onClick={(e) =>
+                                  toggleFavorite(e, product.id, product.name)
+                                }
+                                className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition z-50"
+                              >
+                                {favorites[product.id] ? (
+                                  <AiFillHeart className="h-6 w-6 text-orange" />
+                                ) : (
+                                  <AiOutlineHeart className="h-6 w-6 text-gray-400" />
+                                )}
+                              </button>
+
+                              <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
+                                {product.category}
                               </div>
                             </div>
-                          )}
 
-                          <div
-                            className="
-    absolute inset-0
-    opacity-0 group-hover:opacity-100
-    flex items-center justify-center
-    transition-opacity duration-300    z-0
-  "
-                          >
-                            <span
-                              className="
-      bg-white text-darkBlue
-      px-6 py-3 rounded-full
-       shadow text-sm
-    "
-                            >
-                              View Details
-                            </span>
-                          </div>
+                            <div className="p-6 flex flex-col justify-between flex-1 sm:h-80">
+                              <div>
+                                <h3 className="text-2xl font-semibold text-darkBlue">
+                                  {product.name}
+                                </h3>
+                                <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
+                                  {product.details}
+                                </p>
+                              </div>
 
-                          <button
-                            onClick={(e) =>
-                              toggleFavorite(e, product.id, product.name)
-                            }
-                            className="absolute top-4 right-4 bg-white/95 p-2 rounded-full shadow hover:scale-105 transition z-50"
-                          >
-                            {favorites[product.id] ? (
-                              <AiFillHeart className="h-6 w-6 text-orange" />
-                            ) : (
-                              <AiOutlineHeart className="h-6 w-6 text-gray-400" />
-                            )}
-                          </button>
-
-                          <div className="absolute left-4 bottom-4 bg-blue text-white text-sm font-medium px-3 py-1 rounded-full shadow-md">
-                            {product.category}
-                          </div>
-                        </div>
-
-                        <div className="p-6 flex flex-col justify-between flex-1 sm:h-80">
-                          <div>
-                            <h3 className="text-2xl font-semibold text-darkBlue">
-                              {product.name}
-                            </h3>
-                            <p className="text-darkBlue/70 mt-3 italic leading-relaxed">
-                              {product.details}
-                            </p>
-                          </div>
-
-                          <div className="flex flex-col gap-3 mt-6">
-                            <div className="text-lg font-bold text-orange">
-                              {product.outOfStock ? (
-                                <span className="text-red-600">
-                                  Not Available
-                                </span>
-                              ) : product.realPrice !== product.price ? (
-                                <>
-                                  <span className="line-through text-gray-400 mr-2">
-                                    {product.realPrice} EGP
-                                  </span>
-                                  {product.price} EGP
-                                </>
-                              ) : (
-                                `${product.price} EGP`
-                              )}
+                              <div className="flex flex-col gap-3 mt-6">
+                                <div className="text-lg font-bold text-orange">
+                                  {product.outOfStock ? (
+                                    <span className="text-red-600">
+                                      Not Available
+                                    </span>
+                                  ) : product.realPrice !== product.price ? (
+                                    <>
+                                      <span className="line-through text-gray-400 mr-2">
+                                        {product.realPrice} EGP
+                                      </span>
+                                      {product.price} EGP
+                                    </>
+                                  ) : (
+                                    `${product.price} EGP`
+                                  )}
+                                </div>
+                                <button
+                                  onClick={(e) =>
+                                    toggleCart(
+                                      e,
+                                      product.id,
+                                      product.name,
+                                      product.outOfStock,
+                                    )
+                                  }
+                                  disabled={product.outOfStock}
+                                  className={`flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow ${
+                                    product.outOfStock
+                                      ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                                      : cart[product.id]
+                                        ? "bg-red-600 hover:bg-red-700 text-white"
+                                        : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
+                                  }`}
+                                >
+                                  {product.outOfStock ? (
+                                    "Out of Stock"
+                                  ) : cart[product.id] ? (
+                                    <>
+                                      Remove{" "}
+                                      <FaShoppingCart size={20} color="white" />
+                                    </>
+                                  ) : (
+                                    "Add To Cart"
+                                  )}
+                                </button>
+                              </div>
                             </div>
-                            <button
-                              onClick={(e) =>
-                                toggleCart(
-                                  e,
-                                  product.id,
-                                  product.name,
-                                  product.outOfStock,
-                                )
-                              }
-                              disabled={product.outOfStock}
-                              className={`
-    flex items-center justify-center gap-1 py-2 px-4 rounded-lg font-semibold transition shadow
-    ${
-      product.outOfStock
-        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-        : cart[product.id]
-          ? "bg-red-600 hover:bg-red-700 text-white"
-          : "bg-gradient-to-r from-orange to-orange/90 text-white hover:from-orange/95 hover:to-orange/80"
-    }
-  `}
-                            >
-                              {product.outOfStock ? (
-                                "Out of Stock"
-                              ) : cart[product.id] ? (
-                                <>
-                                  Remove{" "}
-                                  <FaShoppingCart size={20} color="white" />
-                                </>
-                              ) : (
-                                "Add To Cart"
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </Link>
-                  ))
-                )}
-              </motion.div>
+                          </motion.div>
+                        </Link>
+                      ))
+                    )}
+                  </motion.div>
 
-              {/* Pagination */}
-              {currentProducts.length > 0 && (
-                <div className="flex justify-center mt-8  gap-3 items-center">
-                  {/* Previous Button */}
-                  <button
-                    onClick={() =>
-                      currentPage > 1 && setCurrentPage(currentPage - 1)
-                    }
-                    disabled={currentPage === 1 || totalPages === 0}
-                    className={`px-4 py-2 rounded-lg border ${
-                      currentPage === 1 || totalPages === 0
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
-                    }`}
-                  >
-                    Previous
-                  </button>
+                  {/* Pagination */}
+                  {currentProducts.length > 0 && (
+                    <div className="flex justify-center mt-8 gap-3 items-center">
+                      <button
+                        onClick={() =>
+                          currentPage > 1 && setCurrentPage(currentPage - 1)
+                        }
+                        disabled={currentPage === 1 || totalPages === 0}
+                        className={`px-4 py-2 rounded-lg border ${
+                          currentPage === 1 || totalPages === 0
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                        }`}
+                      >
+                        Previous
+                      </button>
 
-                  {pages.map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-4 py-2 rounded-lg border ${
-                        page === currentPage
-                          ? "bg-darkBlue text-white"
-                          : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                      {pages.map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-4 py-2 rounded-lg border ${
+                            page === currentPage
+                              ? "bg-darkBlue text-white"
+                              : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
 
-                  {/* Next Button */}
-                  <button
-                    onClick={() =>
-                      currentPage < totalPages &&
-                      setCurrentPage(currentPage + 1)
-                    }
-                    disabled={currentPage >= totalPages || totalPages === 0}
-                    className={`px-4 py-2 rounded-lg border ${
-                      currentPage >= totalPages || totalPages === 0
-                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                        : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
-                    }`}
-                  >
-                    Next
-                  </button>
+                      <button
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          setCurrentPage(currentPage + 1)
+                        }
+                        disabled={currentPage >= totalPages || totalPages === 0}
+                        className={`px-4 py-2 rounded-lg border ${
+                          currentPage >= totalPages || totalPages === 0
+                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            : "bg-white text-darkBlue hover:bg-darkBlue hover:text-white"
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 
@@ -624,7 +634,6 @@ export default function Products() {
       <AnimatePresence>
         {drawerOpen && (
           <>
-            {/* Overlay - الضغط عليه يقفل الـ drawer */}
             <motion.div
               key="overlay"
               initial={{ opacity: 0 }}
@@ -635,7 +644,6 @@ export default function Products() {
               className="fixed inset-0 bg-black/40 z-40 xl:hidden"
             />
 
-            {/* Drawer */}
             <motion.div
               key="drawer"
               initial={{ y: "100%" }}
@@ -646,10 +654,7 @@ export default function Products() {
             >
               <button
                 onClick={() => setDrawerOpen(false)}
-                className="absolute top-4 right-4
-           w-5 h-5 flex items-center justify-center
-          
-           text-darkBlue rounded-full  transition"
+                className="absolute top-4 right-4 w-5 h-5 flex items-center justify-center text-darkBlue rounded-full transition"
               >
                 ✕
               </button>
